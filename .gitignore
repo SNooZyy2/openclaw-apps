@@ -1,0 +1,5 @@
+node_modules/
+*.pid
+*.log
+apps/trivia/highscores.json
+screenshots/

@@ -1,0 +1,194 @@
+[
+  {
+    "question": "What is the closest planet to the Sun?",
+    "options": ["Venus", "Mercury", "Mars", "Earth"],
+    "correct": 1,
+    "fun_fact": "Mercury's surface temperature swings from -180°C at night to 430°C during the day."
+  },
+  {
+    "question": "Which element has the chemical symbol 'Au'?",
+    "options": ["Silver", "Aluminum", "Gold", "Argon"],
+    "correct": 2,
+    "fun_fact": "Au comes from the Latin word 'aurum', meaning 'shining dawn'."
+  },
+  {
+    "question": "In what year did the Berlin Wall fall?",
+    "options": ["1987", "1989", "1991", "1985"],
+    "correct": 1,
+    "fun_fact": "The wall fell partly due to a mistaken press conference announcement by an East German official."
+  },
+  {
+    "question": "What is the longest river in the world?",
+    "options": ["Amazon", "Mississippi", "Yangtze", "Nile"],
+    "correct": 3,
+    "fun_fact": "The Nile flows through 11 different countries across northeastern Africa."
+  },
+  {
+    "question": "Which programming language was created by Brendan Eich in 10 days?",
+    "options": ["Python", "Java", "JavaScript", "Ruby"],
+    "correct": 2,
+    "fun_fact": "It was originally called Mocha, then LiveScript, before being renamed JavaScript."
+  },
+  {
+    "question": "What does DNA stand for?",
+    "options": ["Deoxyribonucleic Acid", "Dinitrogen Acid", "Dynamic Neural Architecture", "Dual Nucleotide Array"],
+    "correct": 0,
+    "fun_fact": "If you uncoiled all the DNA in your body, it would stretch about twice the diameter of the Solar System."
+  },
+  {
+    "question": "Which country has the most time zones?",
+    "options": ["Russia", "United States", "France", "China"],
+    "correct": 2,
+    "fun_fact": "France has 12 time zones thanks to its overseas territories scattered across the globe."
+  },
+  {
+    "question": "What was the first message sent over the internet (ARPANET)?",
+    "options": ["HELLO", "LOGIN", "LO", "TEST"],
+    "correct": 2,
+    "fun_fact": "They tried to type LOGIN but the system crashed after just two letters: L and O."
+  },
+  {
+    "question": "How many hearts does an octopus have?",
+    "options": ["1", "2", "3", "4"],
+    "correct": 2,
+    "fun_fact": "Two hearts pump blood to the gills, while the third pumps it to the rest of the body."
+  },
+  {
+    "question": "Which company developed the first commercially successful smartphone?",
+    "options": ["Apple", "Nokia", "BlackBerry", "IBM"],
+    "correct": 3,
+    "fun_fact": "The IBM Simon, released in 1994, had a touchscreen, email, and apps — 13 years before the iPhone."
+  },
+  {
+    "question": "What is the hardest natural substance on Earth?",
+    "options": ["Titanium", "Diamond", "Tungsten", "Quartz"],
+    "correct": 1,
+    "fun_fact": "Despite being the hardest, diamonds are actually quite brittle and can shatter with a hammer blow."
+  },
+  {
+    "question": "In which city were the first modern Olympic Games held?",
+    "options": ["Paris", "London", "Athens", "Rome"],
+    "correct": 2,
+    "fun_fact": "The 1896 Athens Olympics had just 241 athletes from 14 nations — all men."
+  },
+  {
+    "question": "What percentage of the Earth's water is freshwater?",
+    "options": ["About 3%", "About 10%", "About 25%", "About 50%"],
+    "correct": 0,
+    "fun_fact": "Of that 3%, roughly two-thirds is locked in glaciers and ice caps."
+  },
+  {
+    "question": "Who painted the ceiling of the Sistine Chapel?",
+    "options": ["Leonardo da Vinci", "Raphael", "Donatello", "Michelangelo"],
+    "correct": 3,
+    "fun_fact": "Michelangelo considered himself a sculptor, not a painter, and initially refused the commission."
+  },
+  {
+    "question": "What is the speed of light in a vacuum (approximately)?",
+    "options": ["300,000 km/s", "150,000 km/s", "500,000 km/s", "1,000,000 km/s"],
+    "correct": 0,
+    "fun_fact": "At light speed, you could circle the Earth about 7.5 times in one second."
+  },
+  {
+    "question": "Which animal can sleep for up to 3 years?",
+    "options": ["Bear", "Sloth", "Snail", "Tortoise"],
+    "correct": 2,
+    "fun_fact": "Snails can enter a state of hibernation when conditions aren't favorable, lasting up to 3 years."
+  },
+  {
+    "question": "What is the smallest country in the world by area?",
+    "options": ["Monaco", "Vatican City", "San Marino", "Liechtenstein"],
+    "correct": 1,
+    "fun_fact": "Vatican City is about 0.44 square km — you could fit it inside Central Park almost twice."
+  },
+  {
+    "question": "Which tech company was originally called 'BackRub'?",
+    "options": ["Facebook", "Amazon", "Google", "Yahoo"],
+    "correct": 2,
+    "fun_fact": "Larry Page and Sergey Brin renamed it 'Google' — a play on 'googol' (10 to the power of 100)."
+  },
+  {
+    "question": "How many bones does an adult human body have?",
+    "options": ["186", "206", "256", "306"],
+    "correct": 1,
+    "fun_fact": "Babies are born with about 270 bones — many fuse together as they grow."
+  },
+  {
+    "question": "What is the most spoken language in the world by number of native speakers?",
+    "options": ["English", "Hindi", "Mandarin Chinese", "Spanish"],
+    "correct": 2,
+    "fun_fact": "Mandarin Chinese has about 920 million native speakers — more than English and Spanish combined."
+  },
+  {
+    "question": "Which planet has the most moons in our solar system?",
+    "options": ["Jupiter", "Saturn", "Uranus", "Neptune"],
+    "correct": 1,
+    "fun_fact": "Saturn has over 140 confirmed moons, overtaking Jupiter's count in recent surveys."
+  },
+  {
+    "question": "In what year was the World Wide Web invented?",
+    "options": ["1985", "1989", "1993", "1995"],
+    "correct": 1,
+    "fun_fact": "Tim Berners-Lee invented it at CERN. The first website was about the World Wide Web project itself."
+  },
+  {
+    "question": "What is the deepest point in the Earth's oceans?",
+    "options": ["Tonga Trench", "Mariana Trench", "Puerto Rico Trench", "Java Trench"],
+    "correct": 1,
+    "fun_fact": "The Challenger Deep in the Mariana Trench is about 11 km deep — Mount Everest would fit inside with room to spare."
+  },
+  {
+    "question": "Which famous scientist was offered the presidency of Israel in 1952?",
+    "options": ["Niels Bohr", "Albert Einstein", "Richard Feynman", "Enrico Fermi"],
+    "correct": 1,
+    "fun_fact": "Einstein declined, saying he lacked the natural aptitude and experience for dealing with people."
+  },
+  {
+    "question": "What color is a lobster's blood?",
+    "options": ["Red", "Blue", "Green", "Clear"],
+    "correct": 1,
+    "fun_fact": "Lobster blood uses copper-based hemocyanin instead of iron-based hemoglobin, giving it a blue color."
+  },
+  {
+    "question": "Which country invented ice cream?",
+    "options": ["Italy", "France", "China", "United States"],
+    "correct": 2,
+    "fun_fact": "A frozen mixture of milk and rice was packed into snow in China around 200 BC."
+  },
+  {
+    "question": "What is the most downloaded app of all time?",
+    "options": ["WhatsApp", "Instagram", "TikTok", "Facebook"],
+    "correct": 2,
+    "fun_fact": "TikTok reached 3 billion downloads faster than any other app in history."
+  },
+  {
+    "question": "How long is one day on Venus?",
+    "options": ["24 hours", "117 Earth days", "243 Earth days", "10 hours"],
+    "correct": 2,
+    "fun_fact": "A day on Venus is longer than its year — it takes 243 Earth days to rotate once but only 225 to orbit the Sun."
+  },
+  {
+    "question": "Which instrument has the most strings?",
+    "options": ["Harp", "Piano", "Sitar", "Lute"],
+    "correct": 1,
+    "fun_fact": "A standard piano has 230 strings — most notes use 2 or 3 strings struck simultaneously."
+  },
+  {
+    "question": "What was the first video game to be played in space?",
+    "options": ["Pong", "Tetris", "Space Invaders", "Pac-Man"],
+    "correct": 1,
+    "fun_fact": "Russian cosmonaut Aleksandr Serebrov played Tetris on a Game Boy aboard the Mir space station in 1993."
+  },
+  {
+    "question": "Which organ uses about 20% of your body's total energy?",
+    "options": ["Heart", "Liver", "Brain", "Lungs"],
+    "correct": 2,
+    "fun_fact": "The brain weighs only about 2% of body weight but is a massive energy consumer."
+  },
+  {
+    "question": "What is the rarest blood type?",
+    "options": ["O negative", "B negative", "AB positive", "AB negative"],
+    "correct": 3,
+    "fun_fact": "AB negative occurs in less than 1% of the global population."
+  }
+]
