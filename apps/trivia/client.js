@@ -1,15 +1,39 @@
-// ─── State ───────────────────────────────────────────────────────────────────
 let ws = null, myId = null, roomCode = null, creatorId = null;
 let currentScreen = 'lobby', timerInterval = null, pregameInterval = null;
 let reconnectAttempts = 0;
 const MAX_RECONNECT = 3;
 let previousStandings = {}; // 2.4: track previous scores for deltas
 const AVATAR_COLORS = ['#e74c3c', '#3498db', '#2ecc71', '#f39c12', '#9b59b6', '#e94560'];
-
-// ─── Telegram Web App ───────────────────────────────────────────────────────
+let audioCtx = null, muted = localStorage.getItem('trivia_muted') === '1';
+function playTone(freq, dur, type = 'sine', vol = 0.15) {
+  if (muted) return;
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(vol, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + dur);
+    o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + dur);
+  } catch {}
+}
+const sfx = {
+  tick: (n) => playTone(600 + n * 80, 0.08, 'sine', 0.1),
+  tap: () => playTone(800, 0.05, 'square', 0.08),
+  correct: () => { playTone(523, 0.1); setTimeout(() => playTone(659, 0.15), 100); },
+  wrong: () => playTone(200, 0.2, 'sawtooth', 0.1),
+  fanfare: () => [262,330,392,523].forEach((f,i) => setTimeout(() => playTone(f, 0.15, 'sine', 0.12), i*150))
+};
+const muteBtn = document.getElementById('muteBtn');
+if (muteBtn) {
+  muteBtn.textContent = muted ? '\u{1F507}' : '\u{1F50A}';
+  muteBtn.onclick = () => { muted = !muted; localStorage.setItem('trivia_muted', muted ? '1' : '0'); muteBtn.textContent = muted ? '\u{1F507}' : '\u{1F50A}'; };
+}
+document.querySelectorAll('.dot-grid').forEach(g => {
+  for (let i = 0; i < 18; i++) { const d = document.createElement('div'); d.className = 'dot';
+    d.style.cssText = `left:${Math.random()*95}%;top:${Math.random()*95}%;animation-delay:-${(Math.random()*25).toFixed(1)}s`; g.appendChild(d); }
+});
 const tg = window.Telegram?.WebApp;
 let tgUser = null;
-
 if (tg) {
   try {
     tg.ready();
@@ -25,7 +49,6 @@ if (tg) {
     }
   } catch {}
 }
-
 function haptic(type) {
   try {
     if (!tg?.HapticFeedback) return;
@@ -35,9 +58,6 @@ function haptic(type) {
     else if (type === 'error') hf.notificationOccurred('error');
   } catch {}
 }
-
-// ─── Screen management ─────────────────────────────────────────────────────
-
 function showScreen(id) {
   const prev = document.querySelector('.screen.active');
   const el = document.getElementById(id);
@@ -52,8 +72,6 @@ function showScreen(id) {
   el.style.animation = 'none'; el.offsetHeight; el.style.animation = '';
   currentScreen = id;
 }
-
-// ─── WebSocket ──────────────────────────────────────────────────────────────
 function getWsUrl() {
   return `${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}`;
 }
@@ -61,7 +79,6 @@ function connect() {
   const url = getWsUrl();
   ws = new WebSocket(url);
   const statusEl = document.getElementById('connStatus');
-
   ws.onopen = () => {
     statusEl.textContent = 'connected';
     statusEl.className = 'conn-status';
@@ -101,7 +118,6 @@ function connect() {
     }
     ws.send(JSON.stringify({ type: 'join', roomCode, player }));
   };
-
   ws.onmessage = (e) => {
     let msg;
     try { msg = JSON.parse(e.data); } catch { return; }
@@ -115,8 +131,6 @@ function connect() {
   ws.onerror = () => {};
 }
 function send(msg) { if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify(msg)); }
-
-// ─── Message handler ───────────────────────────────────────────────────────
 function handleMessage(msg) {
   switch (msg.type) {
     case 'joined':
@@ -145,14 +159,11 @@ function handleMessage(msg) {
       } break;
   }
 }
-
-// ─── Lobby (2.1 avatar grid) ────────────────────────────────────────────────
 function updateLobby(players) {
   const list = document.getElementById('playerList');
   const count = document.getElementById('playerCount');
   const btn = document.getElementById('startBtn');
   count.textContent = players.length + ' player' + (players.length !== 1 ? 's' : '');
-
   // 2.1: Horizontal wrapped avatar circles
   list.innerHTML = '<div class="avatar-grid">' + players.map((p, i) => {
     const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
@@ -164,14 +175,12 @@ function updateLobby(players) {
       ${isYou ? '<div class="you-badge">(you)</div>' : ''}
     </div>`;
   }).join('') + '</div>';
-
   if (myId == creatorId) {
     btn.textContent = 'Start Game'; btn.disabled = players.length < 1; btn.style.display = '';
   } else {
     btn.textContent = 'Waiting for host to start...'; btn.disabled = true; btn.style.display = '';
   }
 }
-
 // 2.2: Room code copy badge
 document.getElementById('roomCode').addEventListener('click', function () {
   const code = this.textContent.trim();
@@ -184,13 +193,10 @@ document.getElementById('roomCode').addEventListener('click', function () {
   this.appendChild(flash);
   setTimeout(() => flash.remove(), 1200);
 });
-
 document.getElementById('startBtn').addEventListener('click', () => {
   send({ type: 'start_game' });
   document.getElementById('startBtn').disabled = true;
 });
-
-// ─── Pregame countdown ─────────────────────────────────────────────────────
 function startPregameCountdown() {
   let count = 3;
   const el = document.getElementById('pregameCountdown');
@@ -209,10 +215,7 @@ function startPregameCountdown() {
     }
   }, 1000);
 }
-
-// ─── Question ──────────────────────────────────────────────────────────────
 let questionStartTime = 0, answered = false, currentOptions = [];
-
 function showQuestion(msg) {
   answered = msg.alreadyAnswered || false;
   questionStartTime = Date.now();
@@ -232,7 +235,6 @@ function showQuestion(msg) {
   }
   startTimer(msg.timeLimit);
 }
-
 function addRipple(e, btn) {
   const rect = btn.getBoundingClientRect();
   const x = (e.clientX || rect.left + rect.width / 2) - rect.left;
@@ -243,18 +245,15 @@ function addRipple(e, btn) {
   btn.appendChild(span);
   span.addEventListener('animationend', () => span.remove(), { once: true });
 }
-
 function selectAnswer(btn, index, timeLimit, e) {
   if (answered) return;
   answered = true;
-  haptic('tap');
+  haptic('tap'); sfx.tap();
   if (e) addRipple(e, btn);
   btn.classList.add('selected');
   document.querySelectorAll('.option-btn').forEach(b => b.classList.add('locked'));
   send({ type: 'answer', answerIndex: index, timestamp: Date.now() });
 }
-
-// ─── Player strip ──────────────────────────────────────────────────────────
 function buildPlayerStrip(players) {
   const strip = document.getElementById('playerStrip');
   if (!players.length || players.length < 2) { strip.innerHTML = ''; return; }
@@ -273,41 +272,44 @@ function markPlayerAnswered(playerId, answeredCount, totalPlayers) {
 function startTimer(duration) {
   if (timerInterval) clearInterval(timerInterval);
   const bar = document.getElementById('timerBar');
+  const cdOverlay = document.getElementById('countdownOverlay');
   const start = Date.now();
+  let lastSec = -1;
   bar.style.transition = 'none'; bar.style.width = '100%'; bar.className = 'timer-bar ok';
+  if (cdOverlay) { cdOverlay.textContent = Math.ceil(duration / 1000); cdOverlay.className = 'countdown-overlay'; }
   timerInterval = setInterval(() => {
     const elapsed = Date.now() - start;
     const pct = Math.max(0, 1 - (elapsed / duration));
     bar.style.width = (pct * 100) + '%';
     if (pct < 0.2) { bar.classList.remove('ok', 'warn'); bar.classList.add('critical'); }
     else if (pct < 0.5) { bar.classList.remove('ok', 'critical'); bar.classList.add('warn'); }
+    const secsLeft = Math.ceil((duration - elapsed) / 1000);
+    if (cdOverlay && secsLeft !== lastSec && secsLeft >= 0) {
+      lastSec = secsLeft; cdOverlay.textContent = secsLeft || '';
+      cdOverlay.className = secsLeft <= 5 ? 'countdown-overlay pulse-red' : 'countdown-overlay';
+      if (secsLeft <= 5 && secsLeft > 0) sfx.tick(5 - secsLeft);
+    }
     if (elapsed >= duration) clearInterval(timerInterval);
   }, 50);
 }
-
-// ─── Reveal (2.3: effects + streak escalation) ─────────────────────────────
 function flashTension() {
   const overlay = document.createElement('div');
   overlay.className = 'tension-flash';
   document.body.appendChild(overlay);
   overlay.addEventListener('animationend', () => overlay.remove(), { once: true });
 }
-
 function showReveal(msg) {
   if (timerInterval) clearInterval(timerInterval);
   flashTension();
   showScreen('reveal');
   const myResult = msg.playerResults.find(p => p.id == myId) || {};
-
   document.getElementById('revealQuestion').textContent = msg.playerResults.length > 0
     ? document.getElementById('qText')?.textContent || '' : '';
-
   // 2.3: scoreFloat animation via CSS
   const popup = document.getElementById('scorePopup');
   popup.textContent = myResult.correct ? `+${myResult.points}` : '0';
   popup.className = myResult.correct ? 'score-popup' : 'score-popup zero';
-  if (myResult.correct) haptic('success'); else haptic('error');
-
+  if (myResult.correct) { haptic('success'); sfx.correct(); } else { haptic('error'); sfx.wrong(); }
   // 2.3: Streak with escalating warmth
   const streakEl = document.getElementById('streakText');
   streakEl.className = 'streak-text';
@@ -323,7 +325,6 @@ function showReveal(msg) {
   } else {
     streakEl.textContent = '';
   }
-
   // 2.3: Options — correct gets green glow pulse via CSS correctGlow
   const revealOpts = document.getElementById('revealOptions');
   revealOpts.innerHTML = currentOptions.map((opt, i) => {
@@ -338,18 +339,14 @@ function showReveal(msg) {
       <span>${esc(opt)}</span>
     </div>`;
   }).join('');
-
   document.getElementById('funFact').textContent = msg.funFact || '';
   document.getElementById('commentaryText').textContent = msg.commentary || '';
   document.getElementById('commentaryText').style.display = msg.commentary ? '' : 'none';
 }
-
-// ─── Leaderboard (2.4: score deltas + glow) ────────────────────────────────
 function showLeaderboard(msg) {
   showScreen('leaderboard-screen');
   document.getElementById('lbTitle').textContent = 'Leaderboard';
   document.getElementById('lbSubtitle').textContent = `After question ${msg.questionIndex + 1} of ${msg.totalQuestions}`;
-
   const list = document.getElementById('standingsList');
   list.innerHTML = msg.standings.map((p, i) => {
     let cls = 'standing-item';
@@ -366,27 +363,21 @@ function showLeaderboard(msg) {
       <div><div class="standing-score">${p.score}${deltaHtml}</div><div class="standing-correct">${p.correct} correct</div></div>
     </div>`;
   }).join('');
-
   // Fade out deltas after 2s
   setTimeout(() => {
     list.querySelectorAll('.score-delta').forEach(el => el.classList.add('fade-out'));
   }, 2000);
-
   // Store for next round
   previousStandings = {};
   msg.standings.forEach(p => { previousStandings[p.id] = p.score; });
 }
-
-// ─── Podium (2.5: spring bars + score count-up) ────────────────────────────
 function showPodium(msg) {
   showScreen('podium');
   document.getElementById('podiumTopic').textContent = msg.topic;
-
   const ordered = [];
   if (msg.podium.length >= 2) ordered.push({ ...msg.podium[1], place: 2 });
   if (msg.podium.length >= 1) ordered.push({ ...msg.podium[0], place: 1 });
   if (msg.podium.length >= 3) ordered.push({ ...msg.podium[2], place: 3 });
-
   const display = document.getElementById('podiumDisplay');
   display.innerHTML = ordered.map(p => `
     <div class="podium-place p${p.place}">
@@ -396,7 +387,6 @@ function showPodium(msg) {
       <div class="podium-bar">${p.place === 1 ? '1st' : p.place === 2 ? '2nd' : '3rd'}</div>
     </div>
   `).join('');
-
   // 2.5: Score count-up (40ms steps over ~1.5s)
   display.querySelectorAll('.podium-score[data-target]').forEach(el => {
     const target = parseInt(el.dataset.target) || 0;
@@ -410,15 +400,12 @@ function showPodium(msg) {
       el.textContent = Math.round(current) + ' pts';
     }, 40);
   });
-
   const myStanding = msg.standings.find(s => s.id == myId);
   const rankEl = document.getElementById('yourRank');
   if (myStanding && myStanding.rank > 3) {
     rankEl.textContent = `Your rank: #${myStanding.rank} (${myStanding.score} pts)`;
   } else { rankEl.textContent = ''; }
-
   document.getElementById('summaryText').textContent = msg.summary || '';
-
   const costEl = document.getElementById('costLine');
   let costText = '';
   if (msg.cost && msg.cost.totalTokens > 0) {
@@ -434,20 +421,17 @@ function showPodium(msg) {
   }
   costEl.textContent = costText;
   spawnConfetti();
+  sfx.fanfare();
 }
-
 function closeGame() {
   if (ws) try { ws.close(); } catch {}
   if (tg) try { tg.close(); } catch {}
   try { window.close(); } catch {}
   setTimeout(() => { window.location.href = 'about:blank'; }, 300);
 }
-
 document.getElementById('closeBtn').addEventListener('click', closeGame);
 document.getElementById('errorCloseBtn').addEventListener('click', closeGame);
 document.getElementById('leaveBtn').addEventListener('click', () => { send({ type: 'leave' }); });
-
-// ─── Confetti (2.6: 60 pieces, mixed shapes, drift, varied opacity) ────────
 function spawnConfetti() {
   const c = document.createElement('div');
   c.className = 'confetti-container';
@@ -473,18 +457,12 @@ function spawnConfetti() {
   }
   setTimeout(() => c.remove(), 5000);
 }
-
-// ─── Utils ─────────────────────────────────────────────────────────────────
 function esc(s) {
   const d = document.createElement('div');
   d.textContent = s || '';
   return d.innerHTML;
 }
-
-// ─── Logo ──────────────────────────────────────────────────────────────────
 const logoSvg = `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#e94560" stop-opacity="0.4"/><stop offset="70%" stop-color="#e94560" stop-opacity="0.1"/><stop offset="100%" stop-color="#e94560" stop-opacity="0"/></radialGradient><filter id="blur"><feGaussianBlur stdDeviation="2"/></filter><filter id="glow-f"><feGaussianBlur stdDeviation="3"/></filter></defs><circle cx="100" cy="100" r="95" fill="url(#glow)"/><g stroke="#e94560" stroke-opacity="0.2" stroke-width="0.5" fill="none"><line x1="20" y1="40" x2="60" y2="40"/><line x1="60" y1="40" x2="60" y2="20"/><line x1="140" y1="30" x2="170" y2="30"/><line x1="170" y1="30" x2="170" y2="55"/><line x1="30" y1="150" x2="50" y2="150"/><line x1="50" y1="150" x2="50" y2="175"/><line x1="150" y1="160" x2="175" y2="160"/><line x1="175" y1="160" x2="175" y2="140"/><line x1="15" y1="90" x2="35" y2="90"/><line x1="165" y1="110" x2="185" y2="110"/><circle cx="60" cy="20" r="2" fill="#e94560" fill-opacity="0.3"/><circle cx="170" cy="55" r="2" fill="#e94560" fill-opacity="0.3"/><circle cx="50" cy="175" r="2" fill="#e94560" fill-opacity="0.3"/><circle cx="175" cy="140" r="2" fill="#e94560" fill-opacity="0.3"/></g><circle cx="100" cy="100" r="78" fill="none" stroke="#e94560" stroke-width="2" stroke-opacity="0.5" filter="url(#blur)"/><circle cx="100" cy="100" r="78" fill="none" stroke="#e94560" stroke-width="1.5" stroke-opacity="0.8"/><circle cx="100" cy="100" r="62" fill="none" stroke="#e94560" stroke-width="1" stroke-opacity="0.3"/><circle cx="100" cy="100" r="70" fill="none" stroke="#ff6b6b" stroke-width="3" stroke-opacity="0.15" filter="url(#glow-f)"/><circle cx="100" cy="22" r="2.5" fill="#e94560" opacity="0.7"/><circle cx="178" cy="100" r="2.5" fill="#e94560" opacity="0.7"/><circle cx="100" cy="178" r="2.5" fill="#e94560" opacity="0.7"/><circle cx="22" cy="100" r="2.5" fill="#e94560" opacity="0.7"/><text x="100" y="93" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="26" font-weight="700" fill="#eee" letter-spacing="4">ATLAS</text><text x="100" y="118" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="16" font-weight="400" fill="#e94560" letter-spacing="6">QUIZ</text></svg>`;
 document.getElementById('gameLogo').innerHTML = logoSvg;
 document.getElementById('podiumLogo').innerHTML = logoSvg;
-
-// ─── Init ──────────────────────────────────────────────────────────────────
 connect();

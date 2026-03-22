@@ -346,3 +346,49 @@ h2 { font-size: 1.3rem; font-weight: 600; margin-bottom: 6px; }
   transition: background 0.3s; z-index: 50; opacity: 0.7;
 }
 .conn-status.disconnected { background: var(--wrong); }
+
+/* ── Mute toggle ── */
+.mute-btn {
+  position: fixed; top: 10px; left: 10px; z-index: 50; background: rgba(255,255,255,0.1);
+  border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 1.1rem;
+  cursor: pointer; opacity: 0.6; color: var(--text); transition: opacity 0.2s;
+}
+.mute-btn:active { opacity: 1; }
+
+/* ── Dot grid background ── */
+@keyframes dotDrift1 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(30px,-20px); } }
+@keyframes dotDrift2 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-25px,30px); } }
+@keyframes dotDrift3 { 0%,100% { transform: translate(0,0); } 50% { transform: translate(20px,25px); } }
+.dot-grid { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 0; }
+.dot-grid .dot {
+  position: absolute; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent); opacity: 0.12;
+}
+.dot-grid .dot:nth-child(3n) { animation: dotDrift1 22s ease-in-out infinite; }
+.dot-grid .dot:nth-child(3n+1) { animation: dotDrift2 26s ease-in-out infinite; }
+.dot-grid .dot:nth-child(3n+2) { animation: dotDrift3 30s ease-in-out infinite; }
+
+/* ── Answer button watermarks ── */
+.option-btn::before {
+  content: ''; position: absolute; opacity: 0.1; z-index: 0;
+  left: 50%; top: 50%; transform: translate(-50%, -50%);
+}
+.option-btn:nth-child(1)::before {
+  width: 0; height: 0; border-left: 20px solid transparent;
+  border-right: 20px solid transparent; border-bottom: 36px solid white;
+}
+.option-btn:nth-child(2)::before {
+  width: 28px; height: 28px; background: white; transform: translate(-50%,-50%) rotate(45deg);
+}
+.option-btn:nth-child(3)::before { width: 36px; height: 36px; border-radius: 50%; background: white; }
+.option-btn:nth-child(4)::before { width: 32px; height: 32px; background: white; border-radius: 4px; }
+
+/* ── Countdown overlay ── */
+#question-screen { position: relative; }
+.countdown-overlay {
+  position: absolute; font-size: 5rem; font-weight: 800; color: var(--text);
+  opacity: 0.08; z-index: 0; pointer-events: none; user-select: none;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+}
+@keyframes cdPulse { 0%,100% { transform: translate(-50%,-50%) scale(1); } 50% { transform: translate(-50%,-50%) scale(1.1); } }
+.countdown-overlay.pulse-red { color: var(--wrong); opacity: 0.15; animation: cdPulse 0.5s ease infinite; }
