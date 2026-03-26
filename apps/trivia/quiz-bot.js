@@ -99,6 +99,9 @@ async function handleQuizCommand(chatId, topic, messageId) {
     reply_to_message_id: messageId
   });
 
+  if (!result?.ok) {
+    console.log(`[quiz-bot] sendMessage failed:`, JSON.stringify(result));
+  }
   // Store the bot's message ID + chat ID so we can delete it when the game ends
   if (result?.ok && result.result?.message_id) {
     room.telegramMessage = { chatId, messageId: result.result.message_id };
