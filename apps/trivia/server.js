@@ -269,14 +269,15 @@ wss.on('connection', (ws) => {
           name,
           creatorId: room.creatorId,
           players: room.playerList,
-          lobbyExpiresAt: room.lobbyExpiresAt
+          lobbyExpiresAt: room.lobbyExpiresAt,
+          startingAt: room.startCountdownTime || null
         }));
 
         if (result.reconnected && room.state !== STATES.LOBBY) {
           room.sendFullState(id);
         } else {
           // Notify others
-          room.broadcast({ type: 'lobby_update', players: room.playerList, creatorId: room.creatorId, lobbyExpiresAt: room.lobbyExpiresAt }, id);
+          room.broadcast({ type: 'lobby_update', players: room.playerList, creatorId: room.creatorId, lobbyExpiresAt: room.lobbyExpiresAt, startingAt: room.startCountdownTime || null }, id);
         }
         break;
       }

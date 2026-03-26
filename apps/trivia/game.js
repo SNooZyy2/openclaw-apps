@@ -150,7 +150,7 @@ class Room {
 
   get allReady() {
     const connected = [...this.players.values()].filter(p => p.connected);
-    return connected.length >= 2 && connected.every(p => p.ready);
+    return connected.length >= 1 && connected.every(p => p.ready);
   }
 
   get standings() {
@@ -233,12 +233,34 @@ class Room {
     const player = this.players.get(playerId);
     if (!player) return;
     player.ready = !player.ready;
-    this.broadcast({ type: 'lobby_update', players: this.playerList, creatorId: this.creatorId, lobbyExpiresAt: this.lobbyExpiresAt });
 
-    // Auto-start when all players are ready
     if (this.allReady) {
-      this.startGame();
+      // Start a 5-second countdown before launching the game
+      if (!this.startCountdown) {
+        this.startCountdownTime = Date.now() + 5000;
+        this.startCountdown = setTimeout(() => {
+          this.startCountdown = null;
+          if (this.allReady) this.startGame();
+        }, 5000);
+        console.log(`[room ${this.code}] all ready — starting in 5s`);
+      }
+    } else {
+      // Someone un-readied — cancel countdown
+      if (this.startCountdown) {
+        clearTimeout(this.startCountdown);
+        this.startCountdown = null;
+        this.startCountdownTime = null;
+        console.log(`[room ${this.code}] countdown cancelled — not all ready`);
+      }
     }
+
+    this.broadcast({
+      type: 'lobby_update',
+      players: this.playerList,
+      creatorId: this.creatorId,
+      lobbyExpiresAt: this.lobbyExpiresAt,
+      startingAt: this.startCountdownTime || null
+    });
   }
 
   // ── State machine transitions ──
@@ -582,6 +604,7 @@ class Room {
 
   destroy() {
     this.clearTimer();
+    if (this.startCountdown) { clearTimeout(this.startCountdown); this.startCountdown = null; }
     if (this.lobbyTimer) { clearTimeout(this.lobbyTimer); this.lobbyTimer = null; }
     if (this.cleanupTimer) clearTimeout(this.cleanupTimer);
     for (const p of this.players.values()) {

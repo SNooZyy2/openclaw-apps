@@ -123,9 +123,9 @@ function handleMessage(msg) {
     case 'joined':
       myId = msg.you; creatorId = msg.creatorId; roomCode = msg.roomCode;
       document.getElementById('roomCode').textContent = msg.roomCode.toUpperCase();
-      updateLobby(msg.players, msg.lobbyExpiresAt); showScreen('lobby'); break;
+      updateLobby(msg.players, msg.lobbyExpiresAt, msg.startingAt); showScreen('lobby'); break;
     case 'lobby_update':
-      creatorId = msg.creatorId; updateLobby(msg.players, msg.lobbyExpiresAt); break;
+      creatorId = msg.creatorId; updateLobby(msg.players, msg.lobbyExpiresAt, msg.startingAt); break;
     case 'pregame':
       if (lobbyTimerInterval) { clearInterval(lobbyTimerInterval); lobbyTimerInterval = null; }
       document.getElementById('topicLabel').textContent = msg.topic;
@@ -147,7 +147,8 @@ function handleMessage(msg) {
       } break;
   }
 }
-function updateLobby(players, lobbyExpiresAt) {
+let startCountdownInterval = null;
+function updateLobby(players, lobbyExpiresAt, startingAt) {
   const list = document.getElementById('playerList');
   const count = document.getElementById('playerCount');
   const btn = document.getElementById('readyBtn');
@@ -172,7 +173,19 @@ function updateLobby(players, lobbyExpiresAt) {
   btn.classList.toggle('ready-active', imReady);
   // Show ready count
   const readyLabel = document.getElementById('readyCount');
-  if (readyLabel) readyLabel.textContent = `${readyCount} / ${players.length} ready`;
+  if (readyLabel) {
+    if (startingAt) {
+      if (startCountdownInterval) clearInterval(startCountdownInterval);
+      startCountdownInterval = setInterval(() => {
+        const secs = Math.max(0, Math.ceil((startingAt - Date.now()) / 1000));
+        readyLabel.textContent = `Starting in ${secs}...`;
+        if (secs <= 0) { clearInterval(startCountdownInterval); startCountdownInterval = null; }
+      }, 100);
+    } else {
+      if (startCountdownInterval) { clearInterval(startCountdownInterval); startCountdownInterval = null; }
+      readyLabel.textContent = `${readyCount} / ${players.length} ready`;
+    }
+  }
   // Lobby expiry countdown
   const lobbyCountdown = document.getElementById('lobbyCountdown');
   if (lobbyCountdown && lobbyExpiresAt) {
