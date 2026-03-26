@@ -12,7 +12,7 @@ Apps, games, and interactive experiences for the Atlas Telegram bot powered by O
 
 ## Bot Configuration
 
-- **LLM**: `google/gemini-2.5-flash-lite` (free tier, direct Google API via `GEMINI_API_KEY`)
+- **LLM**: `google/gemini-2.5-flash` (free tier, direct Google API via `GEMINI_API_KEY`)
 - **Image gen**: `google/gemini-2.5-flash-image` (patched to ignore agent model overrides — see docs/patches.md)
 - **STT**: `google/gemini-2.5-flash`
 - **TTS**: Microsoft Edge TTS, `de-DE-FlorianMultilingualNeural` (German male, multilingual)

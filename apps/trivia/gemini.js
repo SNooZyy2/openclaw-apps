@@ -97,9 +97,11 @@ async function callGemini(prompt, { timeout = 15000 } = {}) {
       if (usage) {
         gameTokenUsage.inputTokens += usage.promptTokenCount || 0;
         gameTokenUsage.outputTokens += usage.candidatesTokenCount || 0;
+        gameTokenUsage.thinkingTokens += usage.thoughtsTokenCount || 0;
         gameTokenUsage.calls++;
       }
-      console.log(`[gemini] ok (${elapsed}ms, ${text.length} chars, ${usage?.promptTokenCount || '?'}+${usage?.candidatesTokenCount || '?'} tokens)`);
+      const thinking = usage?.thoughtsTokenCount ? `, ${usage.thoughtsTokenCount} thinking` : '';
+      console.log(`[gemini] ok (${elapsed}ms, ${text.length} chars, ${usage?.promptTokenCount || '?'}+${usage?.candidatesTokenCount || '?'} tokens${thinking})`);
       return text;
     } catch (err) {
       clearTimeout(timer);
@@ -123,6 +125,7 @@ Return ONLY a valid JSON array, no markdown fences, no extra text:
 }]
 
 Rules:
+- ALL text MUST be in German (questions, options, fun_fact — everything)
 - Exactly 4 plausible options per question, no obvious joke answers
 - "correct" is the 0-based index of the right answer
 - Mix difficulty: some easy, mostly medium, a couple hard
@@ -189,16 +192,16 @@ function getFallbackQuestions(count) {
 // ─── AI Commentary ──────────────────────────────────────────────────────────────
 
 const COMMENTARY_TEMPLATES = [
-  (s) => s.allWrong ? "Nobody got that one? Really?" : null,
-  (s) => s.allCorrect ? "Too easy! Everyone nailed it." : null,
-  (s) => s.topStreak > 4 ? `${s.streakPlayer} is absolutely on fire right now!` : null,
-  (s) => s.topStreak === 3 ? `${s.streakPlayer} is building a nice streak...` : null,
-  (s) => s.closeRace ? "It's neck and neck at the top!" : null,
-  (s) => s.soloCorrect ? `Only ${s.soloCorrect} got that one. Impressive.` : null,
-  (s) => s.fastestTime < 2000 ? `${s.fastestPlayer} answered in under 2 seconds. Suspicious... or genius.` : null,
-  () => "Let's see who comes out on top.",
-  () => "This is getting interesting.",
-  () => "Next one is going to be tougher.",
+  (s) => s.allWrong ? "Das wusste keiner? Wirklich?" : null,
+  (s) => s.allCorrect ? "Zu einfach! Alle richtig." : null,
+  (s) => s.topStreak > 4 ? `${s.streakPlayer} ist gerade absolut on fire!` : null,
+  (s) => s.topStreak === 3 ? `${s.streakPlayer} baut eine nette Serie auf...` : null,
+  (s) => s.closeRace ? "Kopf an Kopf an der Spitze!" : null,
+  (s) => s.soloCorrect ? `Nur ${s.soloCorrect} wusste das. Respekt.` : null,
+  (s) => s.fastestTime < 2000 ? `${s.fastestPlayer} hat in unter 2 Sekunden geantwortet. Verdächtig... oder genial.` : null,
+  () => "Mal sehen, wer am Ende vorne liegt.",
+  () => "Das wird langsam spannend.",
+  () => "Die nächste wird schwieriger.",
 ];
 
 function getTemplateCommentary(state) {
@@ -207,9 +210,9 @@ function getTemplateCommentary(state) {
     if (result) return result;
   }
   const generic = [
-    "Keep it up!", "The competition is heating up.",
-    "Who's going to take the lead?", "Stay sharp!",
-    "That was a tricky one.", "Here we go..."
+    "Weiter so!", "Es wird immer spannender.",
+    "Wer übernimmt die Führung?", "Aufgepasst!",
+    "Das war eine knifflige Frage.", "Auf geht's..."
   ];
   return generic[Math.floor(Math.random() * generic.length)];
 }
@@ -223,7 +226,7 @@ Game state:
 ${gameState.topStreak > 2 ? `- ${gameState.streakPlayer} is on a ${gameState.topStreak}-question streak` : ''}
 ${gameState.allWrong ? '- Nobody got it right!' : ''}
 
-Reply with ONLY the one-liner, no quotes, no explanation.`;
+Reply in German. Reply with ONLY the one-liner, no quotes, no explanation.`;
 
 async function generateCommentary(gameState) {
   try {
@@ -249,7 +252,7 @@ Include:
 - One fun superlative (e.g., "Speed Demon", "Comeback Kid")
 - A playful closing line
 
-Keep it casual and fun. Use basic Markdown (bold with *). No emojis. Reply with ONLY the summary text.`;
+Write in German. Keep it casual and fun. Use basic Markdown (bold with *). No emojis. Reply with ONLY the summary text.`;
 
 async function generateSummary(results) {
   try {
@@ -264,7 +267,7 @@ async function generateSummary(results) {
     '',
     results.standings.map((p, i) => `${i === 0 ? '👑' : `${i + 1}.`} ${p.name} — ${p.score} pts`).join('\n'),
     '',
-    `${top.name} takes the crown! Better luck next time, everyone.`
+    `${top.name} holt sich die Krone! Mehr Glück beim nächsten Mal.`
   ].join('\n');
 }
 

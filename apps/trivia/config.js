@@ -26,12 +26,13 @@ const MAX_PLAYERS = 20;
 const MAX_QUESTIONS = 5;
 const DEFAULT_QUESTION_COUNT = 5;
 
-// Cost tracking (free models = $0, but track tokens anyway)
-const COST_PER_M_INPUT = 0;
-const COST_PER_M_OUTPUT = 0;
+// Cost tracking — Gemini 2.5 Flash (Paid Tier 1, ≤200K context)
+const COST_PER_M_INPUT = 0.15;
+const COST_PER_M_OUTPUT = 0.60;
+const COST_PER_M_THINKING = 3.50;
 
 // Mutable shared reference — gemini.js writes, game.js reads
-const gameTokenUsage = { inputTokens: 0, outputTokens: 0, calls: 0 };
+const gameTokenUsage = { inputTokens: 0, outputTokens: 0, thinkingTokens: 0, calls: 0 };
 
 module.exports = {
   PORT,
@@ -55,5 +56,6 @@ module.exports = {
   DEFAULT_QUESTION_COUNT,
   COST_PER_M_INPUT,
   COST_PER_M_OUTPUT,
+  COST_PER_M_THINKING,
   gameTokenUsage
 };

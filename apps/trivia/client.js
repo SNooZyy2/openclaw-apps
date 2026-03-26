@@ -409,15 +409,20 @@ function showPodium(msg) {
   const costEl = document.getElementById('costLine');
   let costText = '';
   if (msg.cost && msg.cost.totalTokens > 0) {
-    const cost = msg.cost.costUsd < 0.01 ? '< $0.01' : `~$${msg.cost.costUsd.toFixed(3)}`;
-    costText = `This game: ${msg.cost.totalTokens.toLocaleString()} tokens (${cost})`;
+    const costEur = msg.cost.costUsd * 0.92;
+    const cost = costEur < 0.01 ? '< €0.01' : `~€${costEur.toFixed(3)}`;
+    const tokens = msg.cost.totalTokens > 1_000_000
+      ? (msg.cost.totalTokens / 1_000_000).toFixed(1) + 'M'
+      : msg.cost.totalTokens.toLocaleString();
+    costText = `This game: ${tokens} tokens (${cost})`;
   }
   if (msg.atlasUsage) {
     const total = msg.atlasUsage.totalTokens > 1_000_000
       ? (msg.atlasUsage.totalTokens / 1_000_000).toFixed(1) + 'M'
       : Math.round(msg.atlasUsage.totalTokens / 1000) + 'K';
+    const costEur = (msg.atlasUsage.estimatedCostUsd || 0) * 0.92;
     costText += costText ? '\n' : '';
-    costText += `Atlas total: ${total} tokens (~$${msg.atlasUsage.estimatedCostUsd.toFixed(2)})`;
+    costText += `Atlas total: ${total} tokens (~€${costEur.toFixed(2)})`;
   }
   costEl.textContent = costText;
   spawnConfetti();

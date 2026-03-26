@@ -17,6 +17,7 @@ const {
   DEFAULT_QUESTION_COUNT,
   COST_PER_M_INPUT,
   COST_PER_M_OUTPUT,
+  COST_PER_M_THINKING,
   gameTokenUsage
 } = require('./config');
 const {
@@ -206,6 +207,7 @@ class Room {
     // Reset token usage for this game
     gameTokenUsage.inputTokens = 0;
     gameTokenUsage.outputTokens = 0;
+    gameTokenUsage.thinkingTokens = 0;
     gameTokenUsage.calls = 0;
 
     // Start question generation if not already started
@@ -416,11 +418,13 @@ class Room {
     // Calculate cost for this game
     const inputCost = (gameTokenUsage.inputTokens / 1_000_000) * COST_PER_M_INPUT;
     const outputCost = (gameTokenUsage.outputTokens / 1_000_000) * COST_PER_M_OUTPUT;
-    const totalCost = inputCost + outputCost;
+    const thinkingCost = (gameTokenUsage.thinkingTokens / 1_000_000) * COST_PER_M_THINKING;
+    const totalCost = inputCost + outputCost + thinkingCost;
     const costInfo = {
       inputTokens: gameTokenUsage.inputTokens,
       outputTokens: gameTokenUsage.outputTokens,
-      totalTokens: gameTokenUsage.inputTokens + gameTokenUsage.outputTokens,
+      thinkingTokens: gameTokenUsage.thinkingTokens,
+      totalTokens: gameTokenUsage.inputTokens + gameTokenUsage.outputTokens + gameTokenUsage.thinkingTokens,
       apiCalls: gameTokenUsage.calls,
       costUsd: Math.round(totalCost * 10000) / 10000
     };

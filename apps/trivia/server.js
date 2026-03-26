@@ -32,7 +32,7 @@ const { setQuizBotDeps: setGameQuizBotDeps } = require('./game');
 // ─── Wire up dependencies (avoid circular requires) ────────────────────────────
 
 // quiz-bot needs getOrCreateRoom and getHighscores from game/highscores
-setQuizBotDeps({ getOrCreateRoom, getHighscores });
+setQuizBotDeps({ getOrCreateRoom, getHighscores, readAtlasUsage });
 
 // game needs sendQuizBot / lastResultsMessage from quiz-bot
 setGameQuizBotDeps({
@@ -53,6 +53,7 @@ function readAtlasUsage() {
   for (const [key, session] of Object.entries(sessions)) {
     if (session.inputTokens) totalInput += session.inputTokens;
     if (session.outputTokens) totalOutput += session.outputTokens;
+    // Use OpenClaw's own cost estimate — it accounts for thinking tokens
     if (session.estimatedCostUsd) totalCost += session.estimatedCostUsd;
     if (session.sessionId) sessionCount++;
   }

@@ -30,13 +30,53 @@ function getQuizBotToken() {
   return QUIZ_BOT_TOKEN;
 }
 
-// getOrCreateRoom and getHighscores are injected to avoid circular deps
+// getOrCreateRoom, getHighscores, readAtlasUsage are injected to avoid circular deps
 let _getOrCreateRoom = null;
 let _getHighscores = null;
+let _readAtlasUsage = null;
 
-function setDeps({ getOrCreateRoom, getHighscores }) {
+function setDeps({ getOrCreateRoom, getHighscores, readAtlasUsage }) {
   _getOrCreateRoom = getOrCreateRoom;
   _getHighscores = getHighscores;
+  _readAtlasUsage = readAtlasUsage;
+}
+
+async function handleCostsCommand(chatId, messageId) {
+  try {
+    if (!_readAtlasUsage) throw new Error('Usage data not available');
+    const usage = _readAtlasUsage();
+    const costEur = (usage.estimatedCostUsd * 0.92);
+    const fmtTokens = (n) => n > 1_000_000
+      ? (n / 1_000_000).toFixed(1) + 'M'
+      : Math.round(n / 1000) + 'K';
+
+    const lines = [
+      '📊 Atlas API Costs',
+      '',
+      `Input: ${fmtTokens(usage.totalInputTokens)} tokens`,
+      `Output: ${fmtTokens(usage.totalOutputTokens)} tokens`,
+      `Total: ${fmtTokens(usage.totalTokens)} tokens`,
+      '',
+      `Cost: ~€${costEur.toFixed(2)} (~$${usage.estimatedCostUsd.toFixed(2)})`,
+      `Sessions: ${usage.sessions}`,
+      '',
+      `Pricing: Gemini 2.5 Flash`,
+      `$0.15/1M input, $0.60/1M output`
+    ];
+
+    await sendQuizBot('sendMessage', {
+      chat_id: chatId,
+      text: lines.join('\n'),
+      reply_to_message_id: messageId
+    });
+  } catch (err) {
+    await sendQuizBot('sendMessage', {
+      chat_id: chatId,
+      text: `Could not read usage data: ${err.message}`,
+      reply_to_message_id: messageId
+    });
+  }
+  console.log(`[quiz-bot] /costs in chat ${chatId}`);
 }
 
 async function handleQuizCommand(chatId, topic, messageId) {
@@ -80,6 +120,13 @@ async function pollQuizBot() {
       quizBotOffset = update.update_id + 1;
       const msg = update.message;
       if (!msg?.text) continue;
+
+      // /cost or /costs — show Atlas API costs
+      const costsMatch = msg.text.match(/^\/costs?(?:@\S+)?$/i);
+      if (costsMatch) {
+        await handleCostsCommand(msg.chat.id, msg.message_id);
+        continue;
+      }
 
       // /reset — owner only, wipes highscores
       const resetMatch = msg.text.match(/^\/quiz[-_]?reset(?:@\S+)?$/i);
@@ -126,6 +173,7 @@ async function startQuizBot() {
   await sendQuizBot('setMyCommands', {
     commands: [
       { command: 'quiz', description: 'Start an Atlas Quiz — add a topic after the command' },
+      { command: 'cost', description: 'Show Atlas API usage & costs' },
       { command: 'quizreset', description: 'Reset all highscores (owner only)' }
     ]
   });

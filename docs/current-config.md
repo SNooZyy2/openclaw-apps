@@ -4,7 +4,7 @@
 
 | Purpose | Provider | Model | Cost |
 |---------|----------|-------|------|
-| Primary LLM | Google (direct) | gemini-2.5-flash-lite | Free |
+| Primary LLM | Google (direct) | gemini-2.5-flash | Free |
 | Fallback 1 | OpenRouter | stepfun/step-3.5-flash:free | Free |
 | Fallback 2 | OpenRouter | deepseek/deepseek-chat-v3-0324 | Paid (has credits) |
 | Fallback 3 | OpenRouter | anthropic/claude-3.5-sonnet | Paid (has credits) |
