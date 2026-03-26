@@ -505,6 +505,7 @@ class Room {
 
     // Delete the quiz bot's join message and post compact results
     const quizBotToken = _getQuizBotToken ? _getQuizBotToken() : null;
+    console.log(`[room ${this.code}] endGame — telegramMessage: ${!!this.telegramMessage}, quizBotToken: ${!!quizBotToken}, sendQuizBot: ${!!_sendQuizBot}`);
     if (this.telegramMessage && quizBotToken && _sendQuizBot) {
       const chatId = this.telegramMessage.chatId;
       const winner = this.standings[0];
