@@ -4,7 +4,6 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const { WebSocketServer } = require('ws');
-const crypto = require('crypto');
 
 // ─── Module imports ─────────────────────────────────────────────────────────────
 
@@ -18,6 +17,7 @@ const {
 } = require('./config');
 
 const { STATES, rooms, getOrCreateRoom, getRoom, calculateScore } = require('./game');
+const { verifyTelegramInitData } = require('./auth');
 const { getHighscores } = require('./highscores');
 const {
   sendQuizBot,
@@ -227,9 +227,21 @@ wss.on('connection', (ws) => {
           return;
         }
 
-        const id = msg.player?.id || `anon_${crypto.randomBytes(4).toString('hex')}`;
-        const name = msg.player?.name || `Player ${id}`;
-        const photo = msg.player?.photo || null;
+        // Verify Telegram identity
+        const isReconnect = msg.initData && room.players.has(
+          (() => { try { const u = JSON.parse(new URLSearchParams(msg.initData).get('user') || '{}'); return String(u.id); } catch { return ''; } })()
+        );
+        let id, name, photo;
+        try {
+          const verified = verifyTelegramInitData(msg.initData, getQuizBotToken(), { skipTtl: isReconnect });
+          id = verified.id;
+          name = [verified.firstName, verified.lastName].filter(Boolean).join(' ') || 'Player';
+          photo = msg.photo || null;
+        } catch (err) {
+          console.log(`[room ${code}] initData verification failed: ${err.message}`);
+          ws.send(JSON.stringify({ type: 'error', message: 'Identity verification failed. Reopen from Telegram.' }));
+          return;
+        }
 
         const result = room.addPlayer(id, name, photo, ws);
         if (result.error) {
@@ -247,6 +259,7 @@ wss.on('connection', (ws) => {
           type: 'joined',
           roomCode: code,
           you: id,
+          name,
           creatorId: room.creatorId,
           players: room.playerList
         }));
@@ -275,21 +288,6 @@ wss.on('connection', (ws) => {
         const answerIndex = typeof msg.answerIndex === 'number' ? msg.answerIndex : -1;
         if (answerIndex < 0 || answerIndex > 3) return;
         room.submitAnswer(playerId, answerIndex, msg.timestamp || Date.now());
-        break;
-      }
-
-      case 'rename': {
-        if (!roomCode || !playerId) return;
-        const room = getRoom(roomCode);
-        if (!room) return;
-        const player = room.players.get(playerId);
-        if (!player) return;
-        const newName = String(msg.name || '').trim().slice(0, 20);
-        if (!newName) return;
-        player.name = newName;
-        if (room.state === STATES.LOBBY) {
-          room.broadcast({ type: 'lobby_update', players: room.playerList, creatorId: room.creatorId });
-        }
         break;
       }
 

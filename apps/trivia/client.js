@@ -90,36 +90,18 @@ function connect() {
       document.getElementById('errorMsg').textContent = 'No room code in URL. Join via the Telegram button.';
       return;
     }
-    const player = {};
-    if (tgUser) {
-      player.id = tgUser.id;
-      player.name = [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'Player';
-      player.photo = tgUser.photo_url || null;
-      document.getElementById('nameInputWrap').classList.add('hidden');
-    } else {
-      let browserId = sessionStorage.getItem('trivia_player_id');
-      let browserName = sessionStorage.getItem('trivia_player_name');
-      if (!browserId) {
-        browserId = 'browser_' + Math.random().toString(36).slice(2, 8);
-        sessionStorage.setItem('trivia_player_id', browserId);
-      }
-      browserName = browserName || '';
-      player.id = browserId;
-      player.name = browserName || 'Player';
-      const nameInput = document.getElementById('nameInput');
-      if (browserName) nameInput.value = browserName;
-      nameInput.addEventListener('blur', () => {
-        const newName = nameInput.value.trim();
-        if (newName) {
-          sessionStorage.setItem('trivia_player_name', newName);
-          send({ type: 'rename', name: newName });
-        }
-      });
-      nameInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { nameInput.blur(); }
-      });
+    if (!tg?.initData) {
+      showScreen('error-screen');
+      document.getElementById('errorMsg').textContent = 'Please open this game from the Telegram invite.';
+      return;
     }
-    ws.send(JSON.stringify({ type: 'join', roomCode, player }));
+    const joinMsg = {
+      type: 'join',
+      roomCode,
+      initData: tg.initData,
+      photo: tgUser?.photo_url || null
+    };
+    ws.send(JSON.stringify(joinMsg));
   };
   ws.onmessage = (e) => {
     let msg;
