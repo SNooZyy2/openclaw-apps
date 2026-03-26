@@ -122,6 +122,20 @@ h2 { font-size: 1.3rem; font-weight: 600; margin-bottom: 6px; }
 .avatar-circle .you-badge {
   font-size: 0.6rem; color: var(--accent); font-weight: 600; margin-top: -2px;
 }
+.avatar-circle .ready-badge {
+  font-size: 0.6rem; color: var(--correct); font-weight: 600; margin-top: -2px;
+}
+.avatar-circle.ready .av-ring {
+  animation: avatarPulse 1s ease-in-out infinite;
+  box-shadow: 0 0 12px rgba(46, 204, 113, 0.5);
+}
+.ready-count {
+  font-size: 0.9rem; color: var(--text-dim); margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+#readyBtn.ready-active {
+  background: var(--correct);
+}
 
 .btn {
   background: var(--accent); color: white; border: none; border-radius: 12px;

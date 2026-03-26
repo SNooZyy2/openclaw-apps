@@ -74,6 +74,7 @@ class Player {
     this.answers = [];  // per-question: { answerIndex, timestamp, correct, points }
     this.ws = null;
     this.connected = true;
+    this.ready = false;
   }
 }
 
@@ -124,8 +125,14 @@ class Room {
       name: p.name,
       photo: p.photo,
       score: p.score,
-      connected: p.connected
+      connected: p.connected,
+      ready: p.ready
     }));
+  }
+
+  get allReady() {
+    const connected = [...this.players.values()].filter(p => p.connected);
+    return connected.length >= 2 && connected.every(p => p.ready);
   }
 
   get standings() {
@@ -153,6 +160,7 @@ class Room {
       player.ws = ws;
       player.connected = true;
       player.name = name || player.name;
+      if (this.state === STATES.LOBBY) player.ready = false;
       return { player, reconnected: true };
     }
 
@@ -173,6 +181,7 @@ class Room {
     const player = this.players.get(id);
     if (player) {
       player.connected = false;
+      player.ready = false;
       player.ws = null;
     }
   }
@@ -197,11 +206,24 @@ class Room {
     }
   }
 
+  toggleReady(playerId) {
+    if (this.state !== STATES.LOBBY) return;
+    const player = this.players.get(playerId);
+    if (!player) return;
+    player.ready = !player.ready;
+    this.broadcast({ type: 'lobby_update', players: this.playerList, creatorId: this.creatorId });
+
+    // Auto-start when all players are ready
+    if (this.allReady) {
+      this.startGame();
+    }
+  }
+
   // ── State machine transitions ──
 
   async startGame() {
     if (this.state !== STATES.LOBBY) return;
-    if (this.players.size < 1) return;
+    if (!this.allReady) return;
 
     this.clearTimer();
     // Reset token usage for this game

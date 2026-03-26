@@ -103,17 +103,20 @@ function connect() {
         browserId = 'browser_' + Math.random().toString(36).slice(2, 8);
         sessionStorage.setItem('trivia_player_id', browserId);
       }
-      browserName = browserName || sessionStorage.getItem('trivia_player_name') || '';
+      browserName = browserName || '';
       player.id = browserId;
       player.name = browserName || 'Player';
       const nameInput = document.getElementById('nameInput');
       if (browserName) nameInput.value = browserName;
-      nameInput.addEventListener('change', () => {
+      nameInput.addEventListener('blur', () => {
         const newName = nameInput.value.trim();
         if (newName) {
           sessionStorage.setItem('trivia_player_name', newName);
           send({ type: 'rename', name: newName });
         }
+      });
+      nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { nameInput.blur(); }
       });
     }
     ws.send(JSON.stringify({ type: 'join', roomCode, player }));
@@ -162,24 +165,29 @@ function handleMessage(msg) {
 function updateLobby(players) {
   const list = document.getElementById('playerList');
   const count = document.getElementById('playerCount');
-  const btn = document.getElementById('startBtn');
+  const btn = document.getElementById('readyBtn');
   count.textContent = players.length + ' player' + (players.length !== 1 ? 's' : '');
+  const readyCount = players.filter(p => p.ready).length;
   // 2.1: Horizontal wrapped avatar circles
   list.innerHTML = '<div class="avatar-grid">' + players.map((p, i) => {
     const color = AVATAR_COLORS[i % AVATAR_COLORS.length];
     const initial = (p.name || '?')[0].toUpperCase();
     const isYou = p.id == myId;
-    return `<div class="avatar-circle" style="animation-delay: ${i * 0.06}s">
-      <div class="av-ring" style="background: ${color}; --ring-color: ${color}">${initial}</div>
+    return `<div class="avatar-circle${p.ready ? ' ready' : ''}" style="animation-delay: ${i * 0.06}s">
+      <div class="av-ring" style="background: ${p.ready ? '#2ecc71' : color}; --ring-color: ${p.ready ? '#2ecc71' : color}">${initial}</div>
       <div class="av-name">${esc(p.name)}</div>
       ${isYou ? '<div class="you-badge">(you)</div>' : ''}
+      ${p.ready ? '<div class="ready-badge">Ready</div>' : ''}
     </div>`;
   }).join('') + '</div>';
-  if (myId == creatorId) {
-    btn.textContent = 'Start Game'; btn.disabled = players.length < 1; btn.style.display = '';
-  } else {
-    btn.textContent = 'Waiting for host to start...'; btn.disabled = true; btn.style.display = '';
-  }
+  // Update ready button state
+  const me = players.find(p => p.id == myId);
+  const imReady = me?.ready || false;
+  btn.textContent = imReady ? 'Not Ready' : 'Ready!';
+  btn.classList.toggle('ready-active', imReady);
+  // Show ready count
+  const readyLabel = document.getElementById('readyCount');
+  if (readyLabel) readyLabel.textContent = `${readyCount} / ${players.length} ready`;
 }
 // 2.2: Room code copy badge
 document.getElementById('roomCode').addEventListener('click', function () {
@@ -193,9 +201,9 @@ document.getElementById('roomCode').addEventListener('click', function () {
   this.appendChild(flash);
   setTimeout(() => flash.remove(), 1200);
 });
-document.getElementById('startBtn').addEventListener('click', () => {
-  send({ type: 'start_game' });
-  document.getElementById('startBtn').disabled = true;
+document.getElementById('readyBtn').addEventListener('click', () => {
+  send({ type: 'ready' });
+  haptic('tap'); sfx.tap();
 });
 function startPregameCountdown() {
   let count = 3;

@@ -260,15 +260,11 @@ wss.on('connection', (ws) => {
         break;
       }
 
-      case 'start_game': {
+      case 'ready': {
         if (!roomCode || !playerId) return;
         const room = getRoom(roomCode);
         if (!room) return;
-        if (playerId !== room.creatorId) {
-          ws.send(JSON.stringify({ type: 'error', message: 'Only the room creator can start the game' }));
-          return;
-        }
-        room.startGame();
+        room.toggleReady(playerId);
         break;
       }
 
