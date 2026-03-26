@@ -2,7 +2,7 @@
 
 const PORT = parseInt(process.env.PORT || '8080', 10);
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash-lite';
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-3.0-flash-preview';
 const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || '';
 const QUIZ_LLM_MODEL = process.env.QUIZ_LLM_MODEL || '';
 const BASE_URL = process.env.BASE_URL || `https://srv1176342.taile65f65.ts.net`;
