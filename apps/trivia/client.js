@@ -454,7 +454,10 @@ function closeGame() {
 }
 document.getElementById('closeBtn').addEventListener('click', closeGame);
 document.getElementById('errorCloseBtn').addEventListener('click', closeGame);
-document.getElementById('leaveBtn').addEventListener('click', () => { send({ type: 'leave' }); });
+function confirmLeave() {
+  if (confirm('Leave the game?')) send({ type: 'leave' });
+}
+document.getElementById('leaveBtn').addEventListener('click', confirmLeave);
 function spawnConfetti() {
   const c = document.createElement('div');
   c.className = 'confetti-container';
