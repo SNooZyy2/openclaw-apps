@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { GEMINI_API_KEY, GEMINI_MODEL, OPENROUTER_API_KEY, QUIZ_LLM_MODEL, gameTokenUsage } = require('./config');
+const { GEMINI_API_KEY, GEMINI_MODEL, OPENROUTER_API_KEY, QUIZ_LLM_MODEL, PERPLEXITY_API_KEY, gameTokenUsage } = require('./config');
 
 // ─── LLM API Client (OpenRouter primary, Gemini fallback) ──────────────────────
 
@@ -114,6 +114,39 @@ async function callGemini(prompt, { timeout = 15000 } = {}) {
   throw new Error('Gemini API failed after all retries');
 }
 
+// ─── Perplexity API Client ───────────────────────────────────────────────────────
+
+async function callPerplexity(prompt, { timeout = 20000 } = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeout);
+  try {
+    const start = Date.now();
+    const res = await fetch('https://api.perplexity.ai/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${PERPLEXITY_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'sonar-pro',
+        messages: [{ role: 'user', content: prompt }],
+        temperature: 0.9
+      }),
+      signal: controller.signal
+    });
+    clearTimeout(timer);
+    const elapsed = Date.now() - start;
+    if (!res.ok) throw new Error(`Perplexity ${res.status}: ${await res.text()}`);
+    const data = await res.json();
+    const text = data?.choices?.[0]?.message?.content || '';
+    console.log(`[perplexity] ok (${elapsed}ms, ${text.length} chars)`);
+    return text;
+  } catch (err) {
+    clearTimeout(timer);
+    throw err;
+  }
+}
+
 // ─── Question Generation ────────────────────────────────────────────────────────
 
 const QUESTION_PROMPT = (topic, count) => `Du bist ein deutscher Quizmaster. Erstelle genau ${count} Trivia-Fragen zum Thema "${topic}".
@@ -155,17 +188,54 @@ function validateQuestions(raw) {
   );
 }
 
+const PERPLEXITY_QUESTION_PROMPT = (topic, count) => `Recherchiere interessante und überraschende Fakten zum Thema "${topic}" und erstelle daraus genau ${count} Trivia-Quizfragen.
+
+WICHTIG: Nutze deine Suchfähigkeit um echte, verifizierte Fakten zu finden. Die Fragen sollen auf realen Informationen basieren, nicht auf allgemeinem Wissen.
+WICHTIG: ALLES muss auf Deutsch sein — Fragen, Antworten, Fun Facts.
+WICHTIG: Alle Fragen MÜSSEN sich auf "${topic}" beziehen.
+
+Antworte NUR mit einem validen JSON-Array, keine Markdown-Blöcke, kein weiterer Text:
+[{
+  "question": "...",
+  "options": ["A", "B", "C", "D"],
+  "correct": 0,
+  "fun_fact": "..."
+}]
+
+Regeln:
+- Genau 4 plausible Antwortmöglichkeiten pro Frage, keine offensichtlichen Scherzantworten
+- "correct" ist der 0-basierte Index der richtigen Antwort
+- Schwierigkeit mischen: einige leicht, meistens mittel, ein paar schwer
+- "fun_fact" ist ein überraschender, recherchierter Fakt in einem Satz
+- Fragen sollen kreativ, überraschend und unterhaltsam sein — keine Standard-Wikipedia-Fragen`;
+
 async function generateQuestions(topic, count) {
+  // Try Perplexity first (search-grounded, better facts)
+  if (PERPLEXITY_API_KEY) {
+    try {
+      const raw = await callPerplexity(PERPLEXITY_QUESTION_PROMPT(topic, count));
+      const questions = validateQuestions(raw);
+      if (questions && questions.length >= Math.floor(count / 2)) {
+        console.log(`[questions] perplexity generated ${questions.length}/${count} for "${topic}"`);
+        return questions;
+      }
+      console.log(`[questions] perplexity validation failed, trying gemini`);
+    } catch (err) {
+      console.log(`[questions] perplexity failed: ${err.message}, trying gemini`);
+    }
+  }
+
+  // Fallback to Gemini/OpenRouter
   try {
     const raw = await callLLM(QUESTION_PROMPT(topic, count));
     const questions = validateQuestions(raw);
     if (questions && questions.length >= Math.floor(count / 2)) {
-      console.log(`[questions] generated ${questions.length}/${count} for "${topic}"`);
+      console.log(`[questions] gemini generated ${questions.length}/${count} for "${topic}"`);
       return questions;
     }
-    console.log(`[questions] validation failed, using fallback`);
+    console.log(`[questions] gemini validation failed, using fallback`);
   } catch (err) {
-    console.log(`[questions] generation failed: ${err.message}, using fallback`);
+    console.log(`[questions] gemini failed: ${err.message}, using fallback`);
   }
   return getFallbackQuestions(count);
 }

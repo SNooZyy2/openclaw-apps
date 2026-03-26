@@ -11,8 +11,10 @@ PORT="${PORT:-8080}"
 if [ -f "$HOME/openclaw/.env" ]; then
   [ -z "${GEMINI_API_KEY:-}" ] && GEMINI_API_KEY=$(grep '^GEMINI_API_KEY=' "$HOME/openclaw/.env" | cut -d= -f2-)
   [ -z "${OPENROUTER_API_KEY:-}" ] && OPENROUTER_API_KEY=$(grep '^OPENROUTER_API_KEY=' "$HOME/openclaw/.env" | cut -d= -f2-)
+  [ -z "${PERPLEXITY_API_KEY:-}" ] && PERPLEXITY_API_KEY=$(grep '^PERPLEXITY_API_KEY=' "$HOME/openclaw/.env" | cut -d= -f2-)
   QUIZ_BOT_TOKEN=$(grep '^QUIZ_BOT_TOKEN=' "$HOME/openclaw/.env" | cut -d= -f2- || true)
   export GEMINI_API_KEY OPENROUTER_API_KEY="${OPENROUTER_API_KEY:-}"
+  export PERPLEXITY_API_KEY="${PERPLEXITY_API_KEY:-}"
   export QUIZ_BOT_TOKEN="${QUIZ_BOT_TOKEN:-}"
 fi
 
