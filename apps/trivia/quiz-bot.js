@@ -95,7 +95,7 @@ async function handleQuizCommand(chatId, topic, messageId) {
   const result = await sendQuizBot('sendMessage', {
     chat_id: chatId,
     text: `🎯 Atlas Quiz!\n\nTopic: ${topic}\n${room.questionCount} questions, 15 seconds each\n\nTap below to join!`,
-    reply_markup: { inline_keyboard: [[{ text: '▶ Join Atlas Quiz', url: joinUrl }]] },
+    reply_markup: { inline_keyboard: [[{ text: '▶ Join Atlas Quiz', web_app: { url: joinUrl } }]] },
     reply_to_message_id: messageId
   });
 
