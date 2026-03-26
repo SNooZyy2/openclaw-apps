@@ -566,9 +566,13 @@ class Room {
 const rooms = new Map();
 
 function getOrCreateRoom(topic, questionCount) {
-  // Return existing active room if there is one
+  // Clean up stale empty lobby rooms
   for (const [code, room] of rooms) {
-    if (room.state === STATES.LOBBY) return room;
+    if (room.state === STATES.LOBBY && room.connectedCount === 0) {
+      room.destroy();
+      rooms.delete(code);
+      console.log(`[room ${code}] cleaned up (empty lobby replaced by new game)`);
+    }
   }
 
   const code = makeRoomCode();
