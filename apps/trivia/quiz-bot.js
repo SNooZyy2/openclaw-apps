@@ -15,7 +15,7 @@ async function sendQuizBot(method, body) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body)
   });
-  return res.json();
+  try { return await res.json(); } catch { return null; }
 }
 
 function getLastResultsMessage() {
@@ -170,20 +170,28 @@ async function startQuizBot() {
   }
 
   // Register commands in the bot menu
-  await sendQuizBot('setMyCommands', {
-    commands: [
-      { command: 'quiz', description: 'Start an Atlas Quiz — add a topic after the command' },
-      { command: 'cost', description: 'Show Atlas API usage & costs' },
-      { command: 'quizreset', description: 'Reset all highscores (owner only)' }
-    ]
-  });
-
-  const me = await sendQuizBot('getMe');
-  console.log(`[quiz-bot] @${me.result?.username} ready — /quiz command active`);
+  try {
+    await sendQuizBot('setMyCommands', {
+      commands: [
+        { command: 'quiz', description: 'Start an Atlas Quiz — add a topic after the command' },
+        { command: 'cost', description: 'Show Atlas API usage & costs' },
+        { command: 'quizreset', description: 'Reset all highscores (owner only)' }
+      ]
+    });
+    const me = await sendQuizBot('getMe');
+    console.log(`[quiz-bot] @${me?.result?.username} ready — /quiz command active`);
+  } catch (err) {
+    console.error(`[quiz-bot] init failed: ${err.message}, starting poll loop anyway`);
+  }
 
   // Long-poll loop
   while (true) {
-    await pollQuizBot();
+    try {
+      await pollQuizBot();
+    } catch (err) {
+      console.error(`[quiz-bot] fatal poll error: ${err.message}, resuming in 5s`);
+      await new Promise(r => setTimeout(r, 5000));
+    }
   }
 }
 

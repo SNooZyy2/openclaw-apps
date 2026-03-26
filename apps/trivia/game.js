@@ -183,6 +183,10 @@ class Room {
       player.connected = false;
       player.ready = false;
       player.ws = null;
+      if (this.creatorId === id) {
+        const next = [...this.players.values()].find(p => p.connected);
+        this.creatorId = next?.id ?? null;
+      }
     }
   }
 
@@ -225,7 +229,10 @@ class Room {
     if (this.state !== STATES.LOBBY) return;
     if (!this.allReady) return;
 
+    // Set state immediately to prevent re-entrancy
+    this.state = STATES.PREGAME;
     this.clearTimer();
+
     // Reset token usage for this game
     gameTokenUsage.inputTokens = 0;
     gameTokenUsage.outputTokens = 0;
@@ -237,7 +244,6 @@ class Room {
       this.questionGenerationPromise = generateQuestions(this.topic, this.questionCount);
     }
 
-    this.state = STATES.PREGAME;
     this.broadcast({
       type: 'pregame',
       topic: this.topic,
@@ -254,6 +260,8 @@ class Room {
     }
     this.questionsReady = true;
 
+    // Only proceed if still in PREGAME (room wasn't destroyed during await)
+    if (this.state !== STATES.PREGAME) return;
     this.timer = setTimeout(() => this.nextQuestion(), PREGAME_DURATION);
   }
 

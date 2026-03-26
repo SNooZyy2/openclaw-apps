@@ -61,6 +61,7 @@ async function callOpenRouter(prompt, { timeout = 15000 } = {}) {
       await new Promise(r => setTimeout(r, 1000));
     }
   }
+  throw new Error('OpenRouter API failed after all retries');
 }
 
 async function callGemini(prompt, { timeout = 15000 } = {}) {
@@ -110,6 +111,7 @@ async function callGemini(prompt, { timeout = 15000 } = {}) {
       await new Promise(r => setTimeout(r, 1000));
     }
   }
+  throw new Error('Gemini API failed after all retries');
 }
 
 // ─── Question Generation ────────────────────────────────────────────────────────

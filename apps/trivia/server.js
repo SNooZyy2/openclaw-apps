@@ -294,7 +294,7 @@ wss.on('connection', (ws) => {
         if (!room) return;
         const answerIndex = typeof msg.answerIndex === 'number' ? msg.answerIndex : -1;
         if (answerIndex < 0 || answerIndex > 3) return;
-        room.submitAnswer(playerId, answerIndex, msg.timestamp || Date.now());
+        room.submitAnswer(playerId, answerIndex, Date.now());
         break;
       }
 
@@ -338,6 +338,10 @@ wss.on('connection', (ws) => {
 
         // Remove player entirely from the room
         room.players.delete(playerId);
+        if (room.creatorId === playerId) {
+          const next = [...room.players.values()].find(p => p.connected);
+          room.creatorId = next?.id ?? null;
+        }
         console.log(`[room ${roomCode}] ${player.name} left the game (${room.players.size} remaining)`);
 
         // Broadcast updated player strip to remaining players
