@@ -422,8 +422,6 @@ function showPodium(msg) {
 function closeGame() {
   if (ws) try { ws.close(); } catch {}
   if (tg) try { tg.close(); } catch {}
-  try { window.close(); } catch {}
-  setTimeout(() => { window.location.href = 'about:blank'; }, 300);
 }
 document.getElementById('closeBtn').addEventListener('click', closeGame);
 document.getElementById('errorCloseBtn').addEventListener('click', closeGame);
