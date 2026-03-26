@@ -118,6 +118,14 @@ h2 { font-size: 1.3rem; font-weight: 600; margin-bottom: 6px; }
 .avatar-circle .ready-badge {
   font-size: 0.6rem; color: var(--correct); font-weight: 600; margin-top: -2px;
 }
+/* ── Profile photos ── */
+.av-photo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.av-ring.has-photo { padding: 0; overflow: hidden; }
+.pip-photo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.ps-pip.has-photo { padding: 0; overflow: hidden; font-size: 0; }
+.podium-photo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.podium-avatar.has-photo { padding: 0; overflow: hidden; font-size: 0; }
+
 .avatar-circle.ready .av-ring {
   animation: avatarPulse 1s ease-in-out infinite;
   box-shadow: 0 0 12px rgba(46, 204, 113, 0.5);

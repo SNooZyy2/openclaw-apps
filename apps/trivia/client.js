@@ -156,7 +156,7 @@ function updateLobby(players) {
     const initial = (p.name || '?')[0].toUpperCase();
     const isYou = p.id == myId;
     return `<div class="avatar-circle${p.ready ? ' ready' : ''}" style="animation-delay: ${i * 0.06}s">
-      <div class="av-ring" style="background: ${p.ready ? '#2ecc71' : color}; --ring-color: ${p.ready ? '#2ecc71' : color}">${initial}</div>
+      <div class="av-ring${p.photo ? ' has-photo' : ''}" style="background: ${p.ready ? '#2ecc71' : color}; --ring-color: ${p.ready ? '#2ecc71' : color}">${avatarImg(p.photo, p.name, 'av-photo')}</div>
       <div class="av-name">${esc(p.name)}</div>
       ${isYou ? '<div class="you-badge">(you)</div>' : ''}
       ${p.ready ? '<div class="ready-badge">Ready</div>' : ''}
@@ -248,9 +248,8 @@ function buildPlayerStrip(players) {
   const strip = document.getElementById('playerStrip');
   if (!players.length || players.length < 2) { strip.innerHTML = ''; return; }
   strip.innerHTML = players.map(p => {
-    const initial = (p.name || '?')[0].toUpperCase();
     const isYou = p.id == myId;
-    return `<div class="ps-pip${isYou ? ' is-you' : ''}" data-pid="${p.id}" title="${esc(p.name)}">${initial}</div>`;
+    return `<div class="ps-pip${isYou ? ' is-you' : ''}${p.photo ? ' has-photo' : ''}" data-pid="${p.id}" title="${esc(p.name)}">${avatarImg(p.photo, p.name, 'pip-photo')}</div>`;
   }).join('') + `<span class="ps-counter" id="answerCounter">0/${players.length}</span>`;
 }
 function markPlayerAnswered(playerId, answeredCount, totalPlayers) {
@@ -371,7 +370,7 @@ function showPodium(msg) {
   const display = document.getElementById('podiumDisplay');
   display.innerHTML = ordered.map(p => `
     <div class="podium-place p${p.place}">
-      <div class="podium-avatar">${(p.name || '?')[0].toUpperCase()}</div>
+      <div class="podium-avatar${p.photo ? ' has-photo' : ''}">${avatarImg(p.photo, p.name, 'podium-photo')}</div>
       <div class="podium-name">${esc(p.name)}</div>
       <div class="podium-score" data-target="${p.score}">0 pts</div>
       <div class="podium-bar">${p.place === 1 ? '1st' : p.place === 2 ? '2nd' : '3rd'}</div>
@@ -456,6 +455,12 @@ function esc(s) {
   const d = document.createElement('div');
   d.textContent = s || '';
   return d.innerHTML;
+}
+function avatarImg(photo, name, cls) {
+  const initial = (name || '?')[0].toUpperCase();
+  if (!photo) return initial;
+  const safeInitial = initial.replace(/'/g, "\\'");
+  return `<img src="${esc(photo)}" class="${cls}" alt="${esc(name)}" onerror="this.parentElement.classList.remove('has-photo');this.replaceWith(document.createTextNode('${safeInitial}'))">`;
 }
 const logoSvg = `<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"><defs><radialGradient id="glow" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#e94560" stop-opacity="0.4"/><stop offset="70%" stop-color="#e94560" stop-opacity="0.1"/><stop offset="100%" stop-color="#e94560" stop-opacity="0"/></radialGradient><filter id="blur"><feGaussianBlur stdDeviation="2"/></filter><filter id="glow-f"><feGaussianBlur stdDeviation="3"/></filter></defs><circle cx="100" cy="100" r="95" fill="url(#glow)"/><g stroke="#e94560" stroke-opacity="0.2" stroke-width="0.5" fill="none"><line x1="20" y1="40" x2="60" y2="40"/><line x1="60" y1="40" x2="60" y2="20"/><line x1="140" y1="30" x2="170" y2="30"/><line x1="170" y1="30" x2="170" y2="55"/><line x1="30" y1="150" x2="50" y2="150"/><line x1="50" y1="150" x2="50" y2="175"/><line x1="150" y1="160" x2="175" y2="160"/><line x1="175" y1="160" x2="175" y2="140"/><line x1="15" y1="90" x2="35" y2="90"/><line x1="165" y1="110" x2="185" y2="110"/><circle cx="60" cy="20" r="2" fill="#e94560" fill-opacity="0.3"/><circle cx="170" cy="55" r="2" fill="#e94560" fill-opacity="0.3"/><circle cx="50" cy="175" r="2" fill="#e94560" fill-opacity="0.3"/><circle cx="175" cy="140" r="2" fill="#e94560" fill-opacity="0.3"/></g><circle cx="100" cy="100" r="78" fill="none" stroke="#e94560" stroke-width="2" stroke-opacity="0.5" filter="url(#blur)"/><circle cx="100" cy="100" r="78" fill="none" stroke="#e94560" stroke-width="1.5" stroke-opacity="0.8"/><circle cx="100" cy="100" r="62" fill="none" stroke="#e94560" stroke-width="1" stroke-opacity="0.3"/><circle cx="100" cy="100" r="70" fill="none" stroke="#ff6b6b" stroke-width="3" stroke-opacity="0.15" filter="url(#glow-f)"/><circle cx="100" cy="22" r="2.5" fill="#e94560" opacity="0.7"/><circle cx="178" cy="100" r="2.5" fill="#e94560" opacity="0.7"/><circle cx="100" cy="178" r="2.5" fill="#e94560" opacity="0.7"/><circle cx="22" cy="100" r="2.5" fill="#e94560" opacity="0.7"/><text x="100" y="93" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="26" font-weight="700" fill="#eee" letter-spacing="4">ATLAS</text><text x="100" y="118" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif" font-size="16" font-weight="400" fill="#e94560" letter-spacing="6">QUIZ</text></svg>`;
 document.getElementById('gameLogo').innerHTML = logoSvg;
