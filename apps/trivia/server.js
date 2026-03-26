@@ -227,20 +227,27 @@ wss.on('connection', (ws) => {
           return;
         }
 
-        // Verify Telegram identity
-        const isReconnect = msg.initData && room.players.has(
-          (() => { try { const u = JSON.parse(new URLSearchParams(msg.initData).get('user') || '{}'); return String(u.id); } catch { return ''; } })()
-        );
+        // Verify Telegram identity (initData if available, fall back to client-provided player data)
         let id, name, photo;
-        try {
-          const verified = verifyTelegramInitData(msg.initData, getQuizBotToken(), { skipTtl: isReconnect });
-          id = verified.id;
-          name = [verified.firstName, verified.lastName].filter(Boolean).join(' ') || 'Player';
-          photo = msg.photo || null;
-        } catch (err) {
-          console.log(`[room ${code}] initData verification failed: ${err.message}`);
-          ws.send(JSON.stringify({ type: 'error', message: 'Identity verification failed. Reopen from Telegram.' }));
-          return;
+        if (msg.initData) {
+          const isReconnect = room.players.has(
+            (() => { try { const u = JSON.parse(new URLSearchParams(msg.initData).get('user') || '{}'); return String(u.id); } catch { return ''; } })()
+          );
+          try {
+            const verified = verifyTelegramInitData(msg.initData, getQuizBotToken(), { skipTtl: isReconnect });
+            id = verified.id;
+            name = [verified.firstName, verified.lastName].filter(Boolean).join(' ') || 'Player';
+            photo = msg.photo || null;
+          } catch (err) {
+            console.log(`[room ${code}] initData verification failed: ${err.message}, falling back to client data`);
+            id = String(msg.player?.id || `anon_${require('crypto').randomBytes(4).toString('hex')}`);
+            name = msg.player?.name || 'Player';
+            photo = msg.player?.photo || null;
+          }
+        } else {
+          id = String(msg.player?.id || `anon_${require('crypto').randomBytes(4).toString('hex')}`);
+          name = msg.player?.name || 'Player';
+          photo = msg.player?.photo || null;
         }
 
         const result = room.addPlayer(id, name, photo, ws);

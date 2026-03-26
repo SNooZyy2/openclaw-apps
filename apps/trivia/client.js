@@ -90,17 +90,19 @@ function connect() {
       document.getElementById('errorMsg').textContent = 'No room code in URL. Join via the Telegram button.';
       return;
     }
-    if (!tg?.initData) {
-      showScreen('error-screen');
-      document.getElementById('errorMsg').textContent = 'Please open this game from the Telegram invite.';
-      return;
+    const joinMsg = { type: 'join', roomCode };
+    if (tg?.initData) {
+      joinMsg.initData = tg.initData;
+      joinMsg.photo = tgUser?.photo_url || null;
+    } else if (tgUser) {
+      joinMsg.player = {
+        id: tgUser.id,
+        name: [tgUser.first_name, tgUser.last_name].filter(Boolean).join(' ') || 'Player',
+        photo: tgUser.photo_url || null
+      };
+    } else {
+      joinMsg.player = { id: 'anon_' + Math.random().toString(36).slice(2, 8), name: 'Player' };
     }
-    const joinMsg = {
-      type: 'join',
-      roomCode,
-      initData: tg.initData,
-      photo: tgUser?.photo_url || null
-    };
     ws.send(JSON.stringify(joinMsg));
   };
   ws.onmessage = (e) => {
