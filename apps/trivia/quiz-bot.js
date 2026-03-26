@@ -90,7 +90,7 @@ async function handleQuizCommand(chatId, topic, messageId) {
   }
 
   const room = _getOrCreateRoom(topic, DEFAULT_QUESTION_COUNT);
-  const joinUrl = `${BASE_URL}/game?room=${room.code}`;
+  const joinUrl = `https://t.me/AtlasQuizBotBot?startapp=${room.code}`;
 
   const result = await sendQuizBot('sendMessage', {
     chat_id: chatId,

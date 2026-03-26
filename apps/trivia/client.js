@@ -84,10 +84,10 @@ function connect() {
     statusEl.className = 'conn-status';
     reconnectAttempts = 0;
     const params = new URLSearchParams(location.search);
-    roomCode = params.get('room');
+    roomCode = params.get('room') || tg?.initDataUnsafe?.start_param || null;
     if (!roomCode) {
       showScreen('error-screen');
-      document.getElementById('errorMsg').textContent = 'No room code in URL. Join via the Telegram button.';
+      document.getElementById('errorMsg').textContent = 'No room code found. Use /quiz in the group chat.';
       return;
     }
     const joinMsg = { type: 'join', roomCode };
