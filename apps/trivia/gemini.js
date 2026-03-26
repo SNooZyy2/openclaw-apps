@@ -116,9 +116,12 @@ async function callGemini(prompt, { timeout = 15000 } = {}) {
 
 // ─── Question Generation ────────────────────────────────────────────────────────
 
-const QUESTION_PROMPT = (topic, count) => `Generate exactly ${count} trivia questions about "${topic}".
+const QUESTION_PROMPT = (topic, count) => `Du bist ein deutscher Quizmaster. Erstelle genau ${count} Trivia-Fragen zum Thema "${topic}".
 
-Return ONLY a valid JSON array, no markdown fences, no extra text:
+WICHTIG: Das Thema ist "${topic}" — alle Fragen MÜSSEN sich auf dieses Thema beziehen.
+WICHTIG: ALLES muss auf Deutsch sein — Fragen, Antworten, Fun Facts.
+
+Antworte NUR mit einem validen JSON-Array, keine Markdown-Blöcke, kein weiterer Text:
 [{
   "question": "...",
   "options": ["A", "B", "C", "D"],
@@ -126,13 +129,12 @@ Return ONLY a valid JSON array, no markdown fences, no extra text:
   "fun_fact": "..."
 }]
 
-Rules:
-- ALL text MUST be in German (questions, options, fun_fact — everything)
-- Exactly 4 plausible options per question, no obvious joke answers
-- "correct" is the 0-based index of the right answer
-- Mix difficulty: some easy, mostly medium, a couple hard
-- "fun_fact" is a surprising one-sentence fact shown after the answer
-- Questions should be interesting and engaging, not dry textbook style`;
+Regeln:
+- Genau 4 plausible Antwortmöglichkeiten pro Frage, keine offensichtlichen Scherzantworten
+- "correct" ist der 0-basierte Index der richtigen Antwort
+- Schwierigkeit mischen: einige leicht, meistens mittel, ein paar schwer
+- "fun_fact" ist ein überraschender Fakt in einem Satz, der nach der Antwort gezeigt wird
+- Fragen sollen interessant und unterhaltsam sein, nicht trocken`;
 
 function validateQuestions(raw) {
   let questions;
@@ -219,16 +221,16 @@ function getTemplateCommentary(state) {
   return generic[Math.floor(Math.random() * generic.length)];
 }
 
-const COMMENTARY_PROMPT = (gameState) => `You are Atlas, a witty AI game host. Generate a SHORT one-liner commentary (max 15 words) for a trivia game moment.
+const COMMENTARY_PROMPT = (gameState) => `Du bist Atlas, ein witziger Quiz-Moderator. Schreibe einen KURZEN Kommentar (max 15 Wörter, auf Deutsch) zu diesem Quiz-Moment.
 
-Game state:
-- Question was: "${gameState.question}"
-- ${gameState.correctCount}/${gameState.totalPlayers} got it right
-- Current leader: ${gameState.leader} (${gameState.leaderScore} pts)
-${gameState.topStreak > 2 ? `- ${gameState.streakPlayer} is on a ${gameState.topStreak}-question streak` : ''}
-${gameState.allWrong ? '- Nobody got it right!' : ''}
+Spielstand:
+- Frage war: "${gameState.question}"
+- ${gameState.correctCount}/${gameState.totalPlayers} richtig
+- Führender: ${gameState.leader} (${gameState.leaderScore} Punkte)
+${gameState.topStreak > 2 ? `- ${gameState.streakPlayer} hat eine ${gameState.topStreak}er-Serie` : ''}
+${gameState.allWrong ? '- Niemand hatte recht!' : ''}
 
-Reply in German. Reply with ONLY the one-liner, no quotes, no explanation.`;
+Antworte NUR mit dem Kommentar auf Deutsch, keine Anführungszeichen, keine Erklärung.`;
 
 async function generateCommentary(gameState) {
   try {
@@ -241,20 +243,20 @@ async function generateCommentary(gameState) {
 
 // ─── Game Summary ───────────────────────────────────────────────────────────────
 
-const SUMMARY_PROMPT = (results) => `You are Atlas, a charismatic AI trivia host. Write a brief game results summary (4-5 lines) for a Telegram group chat.
+const SUMMARY_PROMPT = (results) => `Du bist Atlas, ein charismatischer Quiz-Moderator. Schreibe eine kurze Zusammenfassung der Spielergebnisse (4-5 Zeilen, auf Deutsch) für einen Telegram-Gruppenchat.
 
-Results:
-${results.standings.map((p, i) => `${i + 1}. ${p.name} — ${p.score} pts (${p.correct}/${results.totalQuestions} correct)`).join('\n')}
+Ergebnisse:
+${results.standings.map((p, i) => `${i + 1}. ${p.name} — ${p.score} Punkte (${p.correct}/${results.totalQuestions} richtig)`).join('\n')}
 
-Topic: ${results.topic}
-Questions: ${results.totalQuestions}
+Thema: ${results.topic}
+Fragen: ${results.totalQuestions}
 
-Include:
-- Winner announcement
-- One fun superlative (e.g., "Speed Demon", "Comeback Kid")
-- A playful closing line
+Beinhalte:
+- Gewinner-Ankündigung
+- Einen lustigen Superlativ (z.B. "Blitzmerker", "Comeback-König")
+- Einen lockeren Abschluss-Satz
 
-Write in German. Keep it casual and fun. Use basic Markdown (bold with *). No emojis. Reply with ONLY the summary text.`;
+Schreibe auf Deutsch. Locker und lustig. Nutze Markdown (fett mit *). Keine Emojis. Antworte NUR mit dem Text.`;
 
 async function generateSummary(results) {
   try {
