@@ -268,14 +268,15 @@ wss.on('connection', (ws) => {
           you: id,
           name,
           creatorId: room.creatorId,
-          players: room.playerList
+          players: room.playerList,
+          lobbyExpiresAt: room.lobbyExpiresAt
         }));
 
         if (result.reconnected && room.state !== STATES.LOBBY) {
           room.sendFullState(id);
         } else {
           // Notify others
-          room.broadcast({ type: 'lobby_update', players: room.playerList, creatorId: room.creatorId }, id);
+          room.broadcast({ type: 'lobby_update', players: room.playerList, creatorId: room.creatorId, lobbyExpiresAt: room.lobbyExpiresAt }, id);
         }
         break;
       }

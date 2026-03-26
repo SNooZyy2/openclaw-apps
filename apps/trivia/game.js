@@ -117,6 +117,24 @@ class Room {
     this.questionsReady = false;
     this.questionGenerationPromise = null;
     this.telegramMessage = null;
+    this.lobbyExpiresAt = Date.now() + ROOM_CLEANUP_EMPTY;
+
+    // Auto-expire lobby after 2 minutes if game never starts
+    this.lobbyTimer = setTimeout(() => {
+      if (this.state === STATES.LOBBY) {
+        console.log(`[room ${this.code}] lobby expired (2 min timeout)`);
+        this.broadcast({ type: 'error', message: 'Lobby expired. Start a new game with /quiz.' });
+        // Clean up Telegram invite message
+        if (this.telegramMessage && _sendQuizBot) {
+          _sendQuizBot('deleteMessage', {
+            chat_id: this.telegramMessage.chatId,
+            message_id: this.telegramMessage.messageId
+          }).catch(() => {});
+        }
+        this.destroy();
+        rooms.delete(this.code);
+      }
+    }, ROOM_CLEANUP_EMPTY);
   }
 
   get playerList() {
@@ -215,7 +233,7 @@ class Room {
     const player = this.players.get(playerId);
     if (!player) return;
     player.ready = !player.ready;
-    this.broadcast({ type: 'lobby_update', players: this.playerList, creatorId: this.creatorId });
+    this.broadcast({ type: 'lobby_update', players: this.playerList, creatorId: this.creatorId, lobbyExpiresAt: this.lobbyExpiresAt });
 
     // Auto-start when all players are ready
     if (this.allReady) {
@@ -232,6 +250,7 @@ class Room {
     // Set state immediately to prevent re-entrancy
     this.state = STATES.PREGAME;
     this.clearTimer();
+    if (this.lobbyTimer) { clearTimeout(this.lobbyTimer); this.lobbyTimer = null; }
 
     // Reset token usage for this game
     gameTokenUsage.inputTokens = 0;
@@ -529,7 +548,7 @@ class Room {
 
     switch (this.state) {
       case STATES.LOBBY:
-        this.sendTo(playerId, { ...base, type: 'lobby_update', players: this.playerList, creatorId: this.creatorId });
+        this.sendTo(playerId, { ...base, type: 'lobby_update', players: this.playerList, creatorId: this.creatorId, lobbyExpiresAt: this.lobbyExpiresAt });
         break;
       case STATES.PREGAME:
         this.sendTo(playerId, { ...base, type: 'pregame', topic: this.topic, questionCount: this.questionCount });
@@ -562,6 +581,7 @@ class Room {
 
   destroy() {
     this.clearTimer();
+    if (this.lobbyTimer) { clearTimeout(this.lobbyTimer); this.lobbyTimer = null; }
     if (this.cleanupTimer) clearTimeout(this.cleanupTimer);
     for (const p of this.players.values()) {
       if (p.ws) try { p.ws.close(); } catch {}

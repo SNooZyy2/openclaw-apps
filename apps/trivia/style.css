@@ -137,6 +137,9 @@ h2 { font-size: 1.3rem; font-weight: 600; margin-bottom: 6px; }
 #readyBtn.ready-active {
   background: var(--correct);
 }
+.lobby-countdown {
+  font-size: 0.8rem; color: var(--text-dim); margin-top: 12px; opacity: 0.6;
+}
 
 .btn {
   background: var(--accent); color: white; border: none; border-radius: 12px;

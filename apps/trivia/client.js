@@ -1,5 +1,5 @@
 let ws = null, myId = null, roomCode = null, creatorId = null;
-let currentScreen = 'lobby', timerInterval = null, pregameInterval = null;
+let currentScreen = 'lobby', timerInterval = null, pregameInterval = null, lobbyTimerInterval = null;
 let reconnectAttempts = 0;
 const MAX_RECONNECT = 3;
 let previousStandings = {}; // 2.4: track previous scores for deltas
@@ -123,10 +123,11 @@ function handleMessage(msg) {
     case 'joined':
       myId = msg.you; creatorId = msg.creatorId; roomCode = msg.roomCode;
       document.getElementById('roomCode').textContent = msg.roomCode.toUpperCase();
-      updateLobby(msg.players); showScreen('lobby'); break;
+      updateLobby(msg.players, msg.lobbyExpiresAt); showScreen('lobby'); break;
     case 'lobby_update':
-      creatorId = msg.creatorId; updateLobby(msg.players); break;
+      creatorId = msg.creatorId; updateLobby(msg.players, msg.lobbyExpiresAt); break;
     case 'pregame':
+      if (lobbyTimerInterval) { clearInterval(lobbyTimerInterval); lobbyTimerInterval = null; }
       document.getElementById('topicLabel').textContent = msg.topic;
       document.getElementById('qCountLabel').textContent = msg.questionCount + ' questions';
       showScreen('pregame'); startPregameCountdown(); break;
@@ -146,7 +147,7 @@ function handleMessage(msg) {
       } break;
   }
 }
-function updateLobby(players) {
+function updateLobby(players, lobbyExpiresAt) {
   const list = document.getElementById('playerList');
   const count = document.getElementById('playerCount');
   const btn = document.getElementById('readyBtn');
@@ -172,6 +173,21 @@ function updateLobby(players) {
   // Show ready count
   const readyLabel = document.getElementById('readyCount');
   if (readyLabel) readyLabel.textContent = `${readyCount} / ${players.length} ready`;
+  // Lobby expiry countdown
+  const lobbyCountdown = document.getElementById('lobbyCountdown');
+  if (lobbyCountdown && lobbyExpiresAt) {
+    if (lobbyTimerInterval) clearInterval(lobbyTimerInterval);
+    lobbyTimerInterval = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((lobbyExpiresAt - Date.now()) / 1000));
+      const min = Math.floor(remaining / 60);
+      const sec = remaining % 60;
+      lobbyCountdown.textContent = `Lobby closes in ${min}:${String(sec).padStart(2, '0')}`;
+      if (remaining <= 0) {
+        clearInterval(lobbyTimerInterval);
+        lobbyTimerInterval = null;
+      }
+    }, 1000);
+  }
 }
 // 2.2: Room code copy badge
 document.getElementById('roomCode').addEventListener('click', function () {

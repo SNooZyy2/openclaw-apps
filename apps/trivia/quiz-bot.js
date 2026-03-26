@@ -145,6 +145,27 @@ async function pollQuizBot() {
         continue;
       }
 
+      // /quizstop — kill all active rooms
+      const stopMatch = msg.text.match(/^\/quiz[-_]?stop(?:@\S+)?$/i);
+      if (stopMatch) {
+        const OWNER_ID = 467473650;
+        if (msg.from?.id !== OWNER_ID) {
+          await sendQuizBot('sendMessage', { chat_id: msg.chat.id, text: 'Only the owner can stop games.', reply_to_message_id: msg.message_id });
+        } else {
+          const { rooms } = require('./game');
+          let count = 0;
+          for (const [code, room] of rooms) {
+            room.broadcast({ type: 'error', message: 'Game stopped by admin.' });
+            room.destroy();
+            rooms.delete(code);
+            count++;
+          }
+          await sendQuizBot('sendMessage', { chat_id: msg.chat.id, text: count > 0 ? `Stopped ${count} game(s).` : 'No active games.', reply_to_message_id: msg.message_id });
+          console.log(`[quiz-bot] /quizstop — killed ${count} rooms`);
+        }
+        continue;
+      }
+
       const match = msg.text.match(/^\/quiz(?:@\S+)?\s*(.*)/i);
       if (!match) {
         const startMatch = msg.text.match(/^\/start\s*(.*)/i);
@@ -177,6 +198,7 @@ async function startQuizBot() {
     await sendQuizBot('setMyCommands', {
       commands: [
         { command: 'quiz', description: 'Start an Atlas Quiz — add a topic after the command' },
+        { command: 'quizstop', description: 'Stop all active games (owner only)' },
         { command: 'cost', description: 'Show Atlas API usage & costs' },
         { command: 'quizreset', description: 'Reset all highscores (owner only)' }
       ]
