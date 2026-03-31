@@ -1,1 +1,177 @@
-{"games":[],"players":{}}
+{
+  "games": [
+    {
+      "date": "2026-03-26T23:01:17.189Z",
+      "topic": "penis",
+      "questionCount": 5,
+      "playerCount": 0,
+      "winner": "nobody",
+      "winnerScore": 0,
+      "standings": []
+    },
+    {
+      "date": "2026-03-26T23:04:43.867Z",
+      "topic": "penis",
+      "questionCount": 5,
+      "playerCount": 2,
+      "winner": "Maik",
+      "winnerScore": 4201,
+      "standings": [
+        {
+          "name": "Maik",
+          "id": "641727245",
+          "score": 4201,
+          "correct": 3
+        },
+        {
+          "name": "Philipp",
+          "id": "467473650",
+          "score": 2943,
+          "correct": 2
+        }
+      ]
+    },
+    {
+      "date": "2026-03-26T23:24:01.837Z",
+      "topic": "penis",
+      "questionCount": 5,
+      "playerCount": 2,
+      "winner": "Philipp",
+      "winnerScore": 2873,
+      "standings": [
+        {
+          "name": "Philipp",
+          "id": "467473650",
+          "score": 2873,
+          "correct": 2
+        },
+        {
+          "name": "Maik",
+          "id": "641727245",
+          "score": 2677,
+          "correct": 2
+        }
+      ]
+    },
+    {
+      "date": "2026-03-26T23:36:36.010Z",
+      "topic": "penis",
+      "questionCount": 5,
+      "playerCount": 2,
+      "winner": "Maik",
+      "winnerScore": 1457,
+      "standings": [
+        {
+          "name": "Maik",
+          "id": "641727245",
+          "score": 1457,
+          "correct": 1
+        },
+        {
+          "name": "Philipp",
+          "id": "467473650",
+          "score": 1270,
+          "correct": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-03-27T19:17:31.183Z",
+      "topic": "versaute witze",
+      "questionCount": 5,
+      "playerCount": 1,
+      "winner": "Maik",
+      "winnerScore": 2618,
+      "standings": [
+        {
+          "name": "Maik",
+          "id": "641727245",
+          "score": 2618,
+          "correct": 2
+        }
+      ]
+    },
+    {
+      "date": "2026-03-31T01:44:14.429Z",
+      "topic": "Elefanten",
+      "questionCount": 5,
+      "playerCount": 1,
+      "winner": "Philipp",
+      "winnerScore": 1187,
+      "standings": [
+        {
+          "name": "Philipp",
+          "id": "467473650",
+          "score": 1187,
+          "correct": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-03-31T09:21:33.990Z",
+      "topic": "versicherungsforen Leipzig",
+      "questionCount": 5,
+      "playerCount": 1,
+      "winner": "Philipp",
+      "winnerScore": 4165,
+      "standings": [
+        {
+          "name": "Philipp",
+          "id": "467473650",
+          "score": 4165,
+          "correct": 3
+        }
+      ]
+    },
+    {
+      "date": "2026-03-31T12:54:23.520Z",
+      "topic": "Bad Wilsnack",
+      "questionCount": 5,
+      "playerCount": 1,
+      "winner": "Philipp",
+      "winnerScore": 4151,
+      "standings": [
+        {
+          "name": "Philipp",
+          "id": "467473650",
+          "score": 4151,
+          "correct": 3
+        }
+      ]
+    },
+    {
+      "date": "2026-03-31T12:57:33.811Z",
+      "topic": "Philipp",
+      "questionCount": 5,
+      "playerCount": 1,
+      "winner": "Maik",
+      "winnerScore": 1473,
+      "standings": [
+        {
+          "name": "Maik",
+          "id": "641727245",
+          "score": 1473,
+          "correct": 1
+        }
+      ]
+    }
+  ],
+  "players": {
+    "467473650": {
+      "name": "Philipp",
+      "gamesPlayed": 6,
+      "wins": 4,
+      "totalScore": 16589,
+      "totalCorrect": 12,
+      "bestScore": 4165
+    },
+    "641727245": {
+      "name": "Maik",
+      "gamesPlayed": 5,
+      "wins": 4,
+      "totalScore": 12426,
+      "totalCorrect": 9,
+      "bestScore": 4201
+    }
+  }
+}

@@ -4,6 +4,7 @@
 
 const { BASE_URL, DEFAULT_QUESTION_COUNT } = require('./config');
 const { saveHighscores } = require('./highscores');
+const { renderAtlasQrPng } = require('./qr-render');
 
 const QUIZ_BOT_TOKEN = process.env.QUIZ_BOT_TOKEN || '';
 let quizBotOffset = 0;
@@ -16,6 +17,52 @@ async function sendQuizBot(method, body) {
     body: JSON.stringify(body)
   });
   try { return await res.json(); } catch { return null; }
+}
+
+async function sendQuizBotPhoto(chatId, pngBuffer, caption, replyToMessageId) {
+  const form = new FormData();
+  form.append('chat_id', String(chatId));
+  form.append('photo', new Blob([pngBuffer], { type: 'image/png' }), 'qr.png');
+  if (caption) form.append('caption', caption);
+  if (replyToMessageId) form.append('reply_to_message_id', String(replyToMessageId));
+
+  const res = await fetch(`https://api.telegram.org/bot${QUIZ_BOT_TOKEN}/sendPhoto`, {
+    method: 'POST',
+    body: form,
+  });
+  try { return await res.json(); } catch { return null; }
+}
+
+async function handleQrCommand(chatId, input, messageId) {
+  if (!input) {
+    await sendQuizBot('sendMessage', {
+      chat_id: chatId,
+      text: 'Usage: /qr <text or URL>\nExample: /qr https://example.com',
+      reply_to_message_id: messageId
+    });
+    return;
+  }
+
+  try {
+    const png = renderAtlasQrPng(input);
+    const result = await sendQuizBotPhoto(chatId, png, `QR code for: ${input}`, messageId);
+    if (!result?.ok) {
+      console.log(`[quiz-bot] /qr sendPhoto failed:`, JSON.stringify(result));
+      await sendQuizBot('sendMessage', {
+        chat_id: chatId,
+        text: 'Failed to send QR code image.',
+        reply_to_message_id: messageId
+      });
+    }
+  } catch (err) {
+    console.error(`[quiz-bot] /qr error:`, err.message);
+    await sendQuizBot('sendMessage', {
+      chat_id: chatId,
+      text: `Failed to generate QR code: ${err.message}`,
+      reply_to_message_id: messageId
+    });
+  }
+  console.log(`[quiz-bot] /qr "${input.slice(0, 40)}" in chat ${chatId}`);
 }
 
 function getLastResultsMessage() {
@@ -124,6 +171,24 @@ async function pollQuizBot() {
       const msg = update.message;
       if (!msg?.text) continue;
 
+      // /qr with no args — show usage
+      const qrBareMatch = msg.text.match(/^\/qr(?:@\S+)?\s*$/i);
+      if (qrBareMatch) {
+        await sendQuizBot('sendMessage', {
+          chat_id: msg.chat.id,
+          text: 'Usage: /qr <text or URL>\nExample: /qr https://example.com',
+          reply_to_message_id: msg.message_id
+        });
+        continue;
+      }
+
+      // /qr <text> — generate ATLAS-branded QR code
+      const qrMatch = msg.text.match(/^\/qr(?:@\S+)?\s+(.*)/i);
+      if (qrMatch) {
+        await handleQrCommand(msg.chat.id, qrMatch[1].trim(), msg.message_id);
+        continue;
+      }
+
       // /cost or /costs — show Atlas API costs
       const costsMatch = msg.text.match(/^\/costs?(?:@\S+)?$/i);
       if (costsMatch) {
@@ -198,6 +263,7 @@ async function startQuizBot() {
     await sendQuizBot('setMyCommands', {
       commands: [
         { command: 'quiz', description: 'Start an Atlas Quiz — add a topic after the command' },
+        { command: 'qr', description: 'Generate an ATLAS-branded QR code from text or a URL' },
         { command: 'quizstop', description: 'Stop all active games (owner only)' },
         { command: 'cost', description: 'Show Atlas API usage & costs' },
         { command: 'quizreset', description: 'Reset all highscores (owner only)' }
@@ -222,6 +288,7 @@ async function startQuizBot() {
 
 module.exports = {
   sendQuizBot,
+  sendQuizBotPhoto,
   startQuizBot,
   QUIZ_BOT_TOKEN,
   getLastResultsMessage,

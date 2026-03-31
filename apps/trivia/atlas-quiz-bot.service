@@ -1,0 +1,18 @@
+[Unit]
+Description=Atlas Quiz Bot (Telegram)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=snoozyy
+WorkingDirectory=/home/snoozyy/openclaw-apps/apps/trivia
+EnvironmentFile=/home/snoozyy/openclaw/.env
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=5
+StandardOutput=append:/home/snoozyy/openclaw-apps/apps/trivia/server.log
+StandardError=append:/home/snoozyy/openclaw-apps/apps/trivia/server.log
+
+[Install]
+WantedBy=multi-user.target
