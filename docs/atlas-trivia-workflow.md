@@ -1,115 +1,87 @@
 # Atlas Trivia Game Workflow
 
-How Atlas (the bot) creates and manages trivia games via the game server.
+How users start and play trivia games via the quiz bot (`@AtlasQuizBotBot`).
 
 ## Prerequisites
 
-- Game server running on port 8080: `node apps/trivia/server.js`
+- Quiz bot service running: `sudo systemctl status atlas-quiz-bot`
 - Tailscale Funnel active: `tailscale funnel 8080`
 
 ## Flow
 
-### 1. User Requests a Game
+### 1. User Starts a Game
 
-User says something like:
-- "Atlas, start a trivia game"
-- "Atlas, quiz us about space"
-- "Atlas, trivia time!"
+In the Telegram group, send:
+- `/quiz` — starts with "General Knowledge" topic
+- `/quiz space` — starts with a specific topic
 
-### 2. Atlas Creates a Room
+### 2. Quiz Bot Creates a Room
 
-```bash
-curl -s http://localhost:8080/api/create-room -X POST \
-  -H 'Content-Type: application/json' \
-  -d '{"topic":"space","questionCount":7}'
+The bot calls `getOrCreateRoom(topic, 5)` internally (no HTTP — same process). A 6-character hex room code is generated and questions begin pre-generating via Perplexity/Gemini.
+
+### 3. Bot Sends Join Link
+
+The bot sends an `InlineKeyboardButton` to the group:
+```
+web_app: { url: "https://t.me/AtlasQuizBotBot/atlas_quiz?startapp=a1b2c3" }
 ```
 
-Response:
-```json
-{
-  "roomCode": "a1b2c3",
-  "joinUrl": "https://srv1176342.taile65f65.ts.net/game?room=a1b2c3",
-  "status": "LOBBY",
-  "players": 0
-}
-```
+Players tap the button → Telegram opens the Mini App → WebSocket connects to the game server.
 
-### 3. Atlas Sends the Web App Button
+### 4. Lobby
 
-Atlas sends a message to the group with an InlineKeyboardButton:
-```
-web_app: { url: "https://srv1176342.taile65f65.ts.net/game?room=a1b2c3" }
-```
-
-Message example:
-> Trivia time! Topic: **Space** (7 questions)
-> Tap the button below to join!
-
-### 4. (Optional) Atlas Monitors the Lobby
-
-```bash
-curl -s http://localhost:8080/api/room/a1b2c3
-```
-
-Atlas can announce: "3 players have joined so far!"
+Players see each other's avatars (from Telegram profile photos). Each player toggles "Ready". When all players are ready, a 5-second countdown begins.
 
 ### 5. Game Plays (Automatic)
 
-The first player to join is the room creator and can start the game from the WebView. The game runs automatically through all questions.
+State machine: `LOBBY → PREGAME (3s) → QUESTION (15s) → ANSWER_REVEAL (5s) → LEADERBOARD (5s) → loop → GAME_OVER`
 
-### 6. Atlas Fetches Results
+- 5 questions per game (default)
+- Scoring: 1000 base + up to 500 speed bonus + up to 500 streak bonus
+- AI commentary generated per-question (async, template fallback)
 
-After the game ends (state becomes `GAME_OVER`):
+### 6. Results Posted to Chat
 
-```bash
-curl -s http://localhost:8080/api/results/a1b2c3
-```
-
-Response:
-```json
-{
-  "roomCode": "a1b2c3",
-  "topic": "space",
-  "standings": [
-    { "rank": 1, "name": "Alice", "score": 5200, "correct": 5 },
-    { "rank": 2, "name": "Bob", "score": 3800, "correct": 4 }
-  ],
-  "summary": "Alice dominated the Space round with 5200 points...",
-  "totalQuestions": 7,
-  "duration": 180000
-}
-```
-
-Atlas posts the `summary` field to the group chat, or crafts its own message from the structured data.
+When the game ends, the bot:
+1. Deletes the original join message
+2. Posts a compact results summary to the group (standings + AI-generated summary)
+3. Records the game in `highscores.json`
 
 ### 7. Error Handling
 
-If the game server is down:
-> "The game server isn't running right now. Let me check on that."
+- If question generation fails: falls back to local question bank (`questions.json`)
+- If all players disconnect: room auto-cleans after 2 minutes
+- Completed rooms auto-clean after 5 minutes
 
-If room creation fails:
-> "Something went wrong setting up the game. Try again in a moment."
+## REST API (for debugging / manual use)
 
-## TOOLS.md Snippet
+```bash
+# Health check
+curl -s https://srv1176342.taile65f65.ts.net/health | jq
 
-Paste this into Atlas's workspace TOOLS.md for the exec tool:
+# Create a room manually
+curl -s -X POST https://srv1176342.taile65f65.ts.net/api/create-room \
+  -H 'Content-Type: application/json' \
+  -d '{"topic":"cats","questionCount":5}' | jq
 
+# Room status
+curl -s https://srv1176342.taile65f65.ts.net/api/room/ROOMCODE | jq
+
+# Results (only after GAME_OVER)
+curl -s https://srv1176342.taile65f65.ts.net/api/results/ROOMCODE | jq
+
+# Highscores
+curl -s https://srv1176342.taile65f65.ts.net/api/highscores | jq
+
+# Atlas usage stats
+curl -s https://srv1176342.taile65f65.ts.net/api/atlas-usage | jq
 ```
-## Trivia Game
 
-Create multiplayer trivia games for the group.
+## Other Bot Commands
 
-### Create a game
-curl -s http://localhost:8080/api/create-room -X POST -H 'Content-Type: application/json' -d '{"topic":"TOPIC","questionCount":7}'
-Returns: { roomCode, joinUrl, status, players }
-Use joinUrl for the web_app button URL.
-
-### Check game status
-curl -s http://localhost:8080/api/room/ROOMCODE
-Returns: { status, players, currentQuestion, totalQuestions }
-
-### Get results (after game ends)
-curl -s http://localhost:8080/api/results/ROOMCODE
-Returns: { standings, summary, totalQuestions, duration }
-Post the summary to chat.
-```
+| Command | Who | What |
+|---------|-----|------|
+| `/qr <text>` | Anyone | Generate an ATLAS-branded QR code |
+| `/costs` | Anyone | Show API token usage and costs |
+| `/quizstop` | Owner only | Kill all active game rooms |
+| `/quizreset` | Owner only | Wipe all highscores |

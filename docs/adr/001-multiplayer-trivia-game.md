@@ -1,6 +1,6 @@
 # ADR-001: AI-Hosted Live Trivia Game
 
-**Status**: Proposed
+**Status**: Implemented
 **Date**: 2026-03-21
 **Author**: snoozyy
 
@@ -300,39 +300,47 @@ This keeps the integration simple — no bot token sharing, no Telegram API call
 ### File Structure
 ```
 apps/trivia/
-  server.js       — Game server (HTTP + WebSocket + AI integration)
-  index.html      — Game client (single-file, inline CSS/JS)
-  questions.json  — Fallback question bank (offline backup)
-  README.md       — How to run
+  server.js        — HTTP + WebSocket server (388 LOC)
+  game.js          — State machine, rooms, scoring (676 LOC)
+  quiz-bot.js      — Telegram polling bot: /quiz, /qr, /costs (298 LOC)
+  gemini.js        — LLM integration: Perplexity → Gemini → OpenRouter (355 LOC)
+  config.js        — Environment vars, scoring constants, timings (63 LOC)
+  auth.js          — Telegram initData HMAC verification (105 LOC)
+  highscores.js    — Persistent leaderboard (88 LOC)
+  client.js        — Frontend game client (503 LOC)
+  index.html       — Game UI (Telegram Mini App)
+  style.css        — Responsive CSS with animations
+  qr-encode.js     — QR Code Model 2 encoder, EC-H (415 LOC)
+  qr-render.js     — ATLAS-themed QR renderer with logo (220 LOC)
+  png-encode.js    — PNG encode/decode, RGBA (163 LOC)
+  atlas-logo.png   — 152×152 center logo for QR codes
+  questions.json   — Fallback question bank
+  highscores.json  — Persistent scores (generated at runtime)
+  atlas-quiz-bot.service — systemd unit file
 ```
 
 ### Running
+
+The quiz bot runs as a **systemd service** (not manual scripts):
+
 ```bash
-# Install the one dependency
-cd apps/trivia && npm init -y && npm install ws
-
-# Start the game server
-node apps/trivia/server.js
-# Listens on port 8080
-
-# In another terminal, expose via Tailscale Funnel
-tailscale funnel 8080
-# Now live at https://srv1176342.taile65f65.ts.net
+sudo systemctl start atlas-quiz-bot
+sudo systemctl status atlas-quiz-bot
+sudo systemctl restart atlas-quiz-bot
 ```
 
-### Scripts
-```bash
-scripts/start-trivia.sh   — starts server + funnel
-scripts/stop-trivia.sh    — kills server, tears down funnel
-```
+Tailscale Funnel provides HTTPS: `tailscale funnel 8080`
 
 ### Environment Variables
 ```
-GEMINI_API_KEY=...    # Required for AI question generation
-PORT=8080             # Game server port (default 8080)
+QUIZ_BOT_TOKEN=...       # Telegram bot token for @AtlasQuizBotBot (required)
+GEMINI_API_KEY=...       # Google Gemini API key (required for questions)
+PERPLEXITY_API_KEY=...   # Perplexity API key (optional, search-grounded questions)
+OPENROUTER_API_KEY=...   # OpenRouter API key (optional fallback)
+PORT=8080                # Game server port (default 8080)
 ```
 
-The `GEMINI_API_KEY` is already available on the host (same key the bot uses). The game server runs on the host (not inside the Docker container), so it needs its own copy of the key.
+All env vars are set in `~/openclaw/.env` and loaded by systemd via `EnvironmentFile`.
 
 ---
 
@@ -364,13 +372,19 @@ At 5 calls per game, we can run **300 games/day** or **3 games/minute** — well
 - Mobile-first responsive UI
 - Telegram Web App API integration (identity, theme, haptics)
 
-### Out of Scope (Future)
-- Persistent score tracking across games (use Atlas memory later)
-- Custom avatars or player profiles
-- Tournament/bracket mode
-- Audio (TTS for questions — cool but adds complexity)
-- Spectator mode
+### Implemented Since Original ADR
+- Persistent score tracking (highscores.json, /api/highscores endpoint)
+- Profile photos from Telegram (client-provided photo_url)
+- Sound effects (Web Audio API, generated tones — no audio files)
 - Multiple concurrent rooms
+- Server-side Telegram initData verification (auth.js)
+- Separate quiz bot process (@AtlasQuizBotBot) with /quiz, /qr, /costs commands
+- Perplexity as primary question generator (search-grounded facts)
+- QR code generation (/qr command, ported from OpenClaw gateway)
+
+### Out of Scope
+- Tournament/bracket mode
+- Spectator mode
 - Anti-cheat beyond basic server-side validation
 
 ---

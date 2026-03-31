@@ -40,10 +40,18 @@ Apps, games, and interactive experiences for the Atlas Telegram bot powered by O
 
 ```
 apps/           — Self-contained app directories (each app is its own thing)
-  game-name/
-    server.js   — Node.js backend (WebSocket/HTTP)
-    index.html  — Client-side game UI
-    README.md   — How to run/deploy
+  trivia/
+    server.js   — HTTP + WebSocket entry point
+    quiz-bot.js — Telegram polling loop (/quiz, /qr, /costs, admin commands)
+    qr-encode.js — QR Code Model 2 encoder (EC-H, GF(256), Reed-Solomon)
+    qr-render.js — ATLAS-themed QR renderer (logo compositing, neon glow)
+    png-encode.js — PNG encode/decode (RGBA, only node:zlib)
+    atlas-logo.png — 152×152 center logo for QR codes
+    game.js     — Quiz game room logic
+    gemini.js   — Gemini API for question generation
+    client.js   — Web UI (Telegram Mini App)
+    index.html, style.css — Frontend
+    atlas-quiz-bot.service — systemd unit file
 docs/           — Project documentation
 scripts/        — Helper scripts (deploy, start, stop)
 ```
@@ -83,6 +91,34 @@ The bot can:
 ## Code Style
 
 - **Max 500 lines per file.** If a file grows beyond 500 lines, split it into modules. This applies to docs, source files, and HTML. For the single-file `index.html`, inline JS and CSS count toward the limit — extract into separate files if needed.
+
+## Quiz Bot Process
+
+The quiz bot (`@AtlasQuizBotBot`) runs as a **separate process** from the OpenClaw gateway, managed by systemd (`atlas-quiz-bot.service`). This is intentional — slash commands (`/quiz`, `/qr`, `/costs`) survive gateway crashes.
+
+- **Runtime**: Node.js 22+ (CommonJS, NOT ESM). Do not add `import`/`export` or `"type": "module"`.
+- **Dependencies**: Only `ws` (WebSocket). Do not add npm packages — use Node built-ins.
+- **Telegram**: Raw `fetch()` against `https://api.telegram.org/bot${TOKEN}/METHOD`. No bot framework.
+- **Photo uploads**: Node 22 built-in `FormData` + `Blob`. No multipart libraries.
+- **Service management**: `sudo systemctl restart atlas-quiz-bot` (not nohup)
+- **Env vars**: Loaded from `~/openclaw/.env` via systemd `EnvironmentFile`
+
+### QR Code Integration (2026-03-31)
+
+The `/qr` command was extracted from the OpenClaw gateway plugin system (`extensions/qrcode/`) into the quiz bot. The QR renderer was overhauled for scannability and visual quality (see ADR-004).
+
+**File structure:**
+- `qr-encode.js` — QR Code Model 2 encoder (~415 LOC, GF(256) + Reed-Solomon, EC level H)
+- `qr-render.js` — ATLAS-themed PNG renderer (~220 LOC, logo compositing, neon glow)
+- `png-encode.js` — PNG encode + decode (~163 LOC, RGBA, all 5 filter types). Uses only `node:zlib`.
+- `atlas-logo.png` — 152×152 pre-rendered center logo (globe + ring + ATLAS text)
+
+**Key details:**
+- Error correction level H (30% recovery) — required because center logo intentionally covers QR modules
+- Scale 48 (each module = 48×48px), margin 2 modules — fills the frame, sharp on Telegram
+- Logo is decoded at startup via `decodePngRgba()` and cached; composited with bilinear scaling + alpha blending
+- The `generate_qr_code` agent tool was intentionally NOT ported — only the `/qr` slash command
+- The OpenClaw repo still has `extensions/qrcode/` (upstream code) but it is no longer loaded locally
 
 ## Known Issues & Patches
 

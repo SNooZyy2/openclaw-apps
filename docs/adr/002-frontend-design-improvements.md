@@ -1,6 +1,6 @@
 # ADR-002: Atlas Quiz Frontend Design Improvements
 
-**Status**: Proposed
+**Status**: Implemented
 **Date**: 2026-03-22
 
 ---

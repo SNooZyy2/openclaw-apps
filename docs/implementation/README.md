@@ -4,15 +4,22 @@ Work packages organized by ADR.
 
 ## ADR-001: Multiplayer Trivia Game
 
-[Work packages](adr-001-trivia-game/) — **Completed**. Game is live.
+[Work packages](../archived/implementation/adr-001-trivia-game/) — **Completed**. Game is live. (Archived)
 
 ## ADR-002: Frontend Design Improvements
 
-[Work packages](adr-002-frontend-design/) — Visual polish for the quiz UI.
+[Work packages](../archived/implementation/adr-002-frontend-design/) — **Completed**. Visual polish applied. (Archived)
+
+All P0–P3 items implemented: background depth, button gradients, timer glow, lobby avatars, reveal effects, screen transitions, sound effects, confetti, animated dot grid.
+
+## ADR-003: Telegram Identity Verification
+
+No separate work packages — implemented directly. Server-side `initData` HMAC verification via `auth.js`.
+
+## ADR-004: QR Code Rendering Overhaul
+
+[Work packages](adr-004-qr-overhaul/) — **Completed**. File split, EC-H, logo compositing, hi-res output.
 
 | # | Package | Effort | Status |
 |---|---------|--------|--------|
-| 1 | [Foundation & Depth](adr-002-frontend-design/wp-1-foundation.md) | Small | Pending |
-| 2 | [Game Screens](adr-002-frontend-design/wp-2-game-screens.md) | Medium | Pending |
-| 3 | [Animations & Transitions](adr-002-frontend-design/wp-3-animations.md) | Medium | Pending |
-| 4 | [Sound & Stretch](adr-002-frontend-design/wp-4-sound-stretch.md) | Large | Pending |
+| 1 | [Full Overhaul](adr-004-qr-overhaul/wp-1-completed.md) | Medium | Done |

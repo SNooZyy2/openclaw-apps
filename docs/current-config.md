@@ -13,7 +13,9 @@
 | TTS | Microsoft Edge | de-DE-FlorianMultilingualNeural | Free |
 | Memory embeddings | Google (direct) | Gemini embeddings | Free |
 
-## API Keys (in container env)
+## API Keys
+
+### OpenClaw Gateway (in container env)
 
 | Variable | Purpose |
 |----------|---------|
@@ -22,8 +24,19 @@
 | `TELEGRAM_BOT_TOKEN` | Bot `@SNooZyy_bot` |
 | `PERPLEXITY_API_KEY` | Web search |
 
+### Quiz Bot (in ~/openclaw/.env, loaded by systemd)
+
+| Variable | Purpose |
+|----------|---------|
+| `QUIZ_BOT_TOKEN` | Bot `@AtlasQuizBotBot` (separate from main bot) |
+| `GEMINI_API_KEY` | Question generation (Gemini 3 Flash Preview) |
+| `PERPLEXITY_API_KEY` | Primary question generator (search-grounded) |
+| `OPENROUTER_API_KEY` | Fallback LLM for questions |
+| `PORT` | Game server port (default 8080) |
+
 ## Telegram Settings
 
+### Main Bot (Atlas)
 - **Bot name**: Atlas (`@SNooZyy_bot`)
 - **Group**: `-1003889708134` ("Weltthemen, aber mit KI ! :D")
 - **Group policy**: allowlist, requireMention (responds to "Atlas" or @mention)
@@ -31,6 +44,12 @@
 - **Owner ID**: `467473650`
 - **Streaming**: partial
 - **Config writes**: disabled
+
+### Quiz Bot
+- **Bot name**: `@AtlasQuizBotBot`
+- **Process**: Separate from OpenClaw gateway, managed by systemd (`atlas-quiz-bot`)
+- **Commands**: `/quiz`, `/qr`, `/costs`, `/quizstop`, `/quizreset`
+- **Mini App**: `atlas_quiz` (Web App attached to the bot)
 
 ## Permissions
 

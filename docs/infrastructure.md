@@ -12,15 +12,13 @@
 - **Node name**: `srv1176342`
 - **Tailscale IP**: `100.111.208.123`
 - **DNS name**: `srv1176342.taile65f65.ts.net`
-- **Funnel**: Not yet configured — needed for Telegram Web Apps
+- **Funnel**: Active — `tailscale funnel 8080` → `https://srv1176342.taile65f65.ts.net`
 
-### Setting up Funnel
+### Funnel Management
 ```bash
-# Enable Funnel (one-time, may need ACL approval in Tailscale admin)
-tailscale funnel 8080
-
-# This creates: https://srv1176342.taile65f65.ts.net → localhost:8080
-# Free HTTPS with valid cert, no domain needed
+tailscale funnel status          # Check funnel status
+tailscale funnel 8080            # Re-enable if stopped
+tailscale funnel --remove 8080   # Remove funnel
 ```
 
 ## Docker
@@ -38,7 +36,7 @@ tailscale funnel 8080
 | 18789 | OpenClaw gateway (WS + HTTP) | LAN (0.0.0.0) |
 | 18790 | OpenClaw node bridge | LAN (0.0.0.0) |
 | 18791 | Browser control (container internal) | localhost only |
-| 8080 | Game server (planned) | Via Tailscale Funnel |
+| 8080 | Quiz bot + game server (systemd: atlas-quiz-bot) | Via Tailscale Funnel |
 
 ## Key File Paths
 
@@ -47,4 +45,5 @@ tailscale funnel 8080
 | `/home/snoozyy/openclaw/` | OpenClaw repo + docker-compose |
 | `/home/snoozyy/.openclaw/` | OpenClaw runtime config (bind mount into container) |
 | `/home/snoozyy/openclaw-apps/` | This project — apps, games, docs |
+| `/home/snoozyy/openclaw-apps/apps/trivia/` | Quiz bot + game server (all trivia/QR code files) |
 | `/home/snoozyy/.openclaw/workspace/` | Agent workspace (IDENTITY.md, TOOLS.md, etc.) |
