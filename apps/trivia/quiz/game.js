@@ -537,13 +537,19 @@ class Room {
         message_id: this.telegramMessage.messageId
       }).catch(() => {});
 
-      // Compact result + all-time top 3
-      const hs = getHighscores();
+      // Game results — show this game's standings
       const medals = ['🥇', '🥈', '🥉'];
       const fmt = (n) => n.toLocaleString('en-US');
-      const gameResult = `${medals[0]} ${winner?.name || '—'} wins "${this.topic}" with ${fmt(winner?.score || 0)} pts`;
-      const allTime = hs.allTime.slice(0, 3).map((p, i) => `${medals[i]} ${p.name}: ${fmt(p.totalScore)}`).join(' · ');
-      const text = allTime ? `${gameResult}\nAll-time: ${allTime}` : gameResult;
+      const standings = this.standings;
+      const lines = [
+        `🎯 "${this.topic}" — Results`,
+        '',
+        ...standings.slice(0, 3).map((p, i) => `${medals[i]} ${p.name} — ${fmt(p.score)} pts (${p.correct}/${this.questions.length})`)
+      ];
+      if (standings.length > 3) {
+        lines.push(...standings.slice(3).map(p => `▸ ${p.name} — ${fmt(p.score)} pts`));
+      }
+      const text = lines.join('\n');
 
       _sendBot('sendMessage', {
         chat_id: chatId,
