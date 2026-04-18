@@ -23,3 +23,15 @@ No separate work packages — implemented directly. Server-side `initData` HMAC 
 | # | Package | Effort | Status |
 |---|---------|--------|--------|
 | 1 | [Full Overhaul](adr-004-qr-overhaul/wp-1-completed.md) | Medium | Done |
+
+## ADR-005: Module Separation — Quiz and QR
+
+[Work packages](adr-005-module-separation/) — **Pending**. Subdirectory split into quiz/, qr/, web/.
+
+| # | Package | Effort | Status |
+|---|---------|--------|--------|
+| 1 | [Directory Structure](adr-005-module-separation/wp-1-directory-structure.md) | Small | Pending |
+| 2 | [Extract Handlers](adr-005-module-separation/wp-2-extract-handlers.md) | Medium | Pending |
+| 3 | [Update Paths](adr-005-module-separation/wp-3-update-paths.md) | Small | Pending |
+| 4 | [Smoke Test](adr-005-module-separation/wp-4-smoke-test.md) | Small | Pending |
+| 5 | [Update Docs](adr-005-module-separation/wp-5-update-docs.md) | Small | Pending |

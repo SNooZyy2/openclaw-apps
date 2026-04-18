@@ -74,10 +74,10 @@ curl -s https://srv1176342.taile65f65.ts.net/api/atlas-usage | jq
 | `apps/trivia/server.log` | Server logs (all game activity) |
 | `apps/trivia/highscores.json` | Persistent highscore data |
 | `apps/trivia/questions.json` | Fallback question bank (used when LLM APIs are down) |
-| `apps/trivia/qr-encode.js` | QR Code Model 2 encoder (EC-H, standalone) |
-| `apps/trivia/qr-render.js` | ATLAS-branded QR renderer (logo compositing, neon glow) |
-| `apps/trivia/png-encode.js` | PNG encode/decode (only node:zlib) |
-| `apps/trivia/atlas-logo.png` | 152×152 center logo for QR codes |
+| `apps/trivia/qr/qr-encode.js` | QR Code Model 2 encoder (EC-H, standalone) |
+| `apps/trivia/qr/qr-render.js` | ATLAS-branded QR renderer (logo compositing, neon glow) |
+| `apps/trivia/qr/png-encode.js` | PNG encode/decode (only node:zlib) |
+| `apps/trivia/qr/atlas-logo.png` | 152×152 center logo for QR codes |
 | `apps/trivia/atlas-quiz-bot.service` | systemd unit file (source of truth) |
 | `~/openclaw/.env` | API keys (GEMINI_API_KEY, QUIZ_BOT_TOKEN, PERPLEXITY_API_KEY, etc.) |
 
@@ -113,3 +113,27 @@ tailscale funnel --remove 8080
 **Highscores corrupted:**
 - Use `/quizreset` in the group chat
 - Or manually: `echo '{"games":[],"players":{}}' > ~/openclaw-apps/apps/trivia/highscores.json`
+
+## Atlas (OpenClaw Gateway) Troubleshooting
+
+**Atlas not responding in Telegram:**
+1. Check container is running: `docker ps --filter name=openclaw`
+2. Check logs: `docker logs openclaw-openclaw-gateway-1 --tail 50`
+3. Check detailed log: `docker exec openclaw-openclaw-gateway-1 tail -50 /tmp/openclaw/openclaw-2026-*.log`
+4. Verify bot token: `source ~/openclaw/.env && curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getMe"`
+5. Check for competing pollers: `source ~/openclaw/.env && curl -s "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/getWebhookInfo"`
+6. Restart: `cd ~/openclaw && docker compose restart openclaw-gateway`
+7. Full reset (clears overlay): `cd ~/openclaw && docker compose down && docker compose up -d`
+
+**Charts not delivering:**
+- `MEDIA:` auto-delivery is broken in 2026.4.12. DeepSeek must use the `message` tool with `filePath`.
+- Check workspace TOOLS.md has the correct instructions: `docker exec openclaw-openclaw-gateway-1 cat /home/node/.openclaw/workspace/TOOLS.md`
+- Verify matplotlib works: `docker exec openclaw-openclaw-gateway-1 python3 -c "import matplotlib; print(matplotlib.__version__)"`
+
+**Atlas reacts but doesn't reply in group chat:**
+- Check AGENTS.md group chat rules: `docker exec openclaw-openclaw-gateway-1 grep -A5 "CRITICAL" /home/node/.openclaw/workspace/AGENTS.md`
+- Check session file for `NO_REPLY` patterns: `docker exec openclaw-openclaw-gateway-1 tail -20 /home/node/.openclaw/agents/main/sessions/*.jsonl`
+
+**Stuck delivery queue:**
+- Check: `docker exec openclaw-openclaw-gateway-1 ls /home/node/.openclaw/delivery-queue/`
+- Clear: delete files from host `~/.openclaw/delivery-queue/`, then full `docker compose down && up`
