@@ -71,7 +71,7 @@ function showScreen(id) {
   if (prev && prev.id !== id) {
     prev.classList.add('exiting');
     const cleanup = () => { prev.classList.remove('active', 'exiting'); exitTimers.delete(prev); };
-    prev.addEventListener('animationend', (e) => { if (e.target === prev) cleanup(); }, { once: true });
+    prev.addEventListener('animationend', (e) => { if (e.target === prev && prev.classList.contains('exiting')) cleanup(); }, { once: true });
     exitTimers.set(prev, setTimeout(cleanup, 250));
   }
   el.classList.remove('exiting');
@@ -324,6 +324,7 @@ function flashTension() {
   overlay.className = 'tension-flash';
   document.body.appendChild(overlay);
   overlay.addEventListener('animationend', () => overlay.remove(), { once: true });
+  setTimeout(() => { if (overlay.parentNode) overlay.remove(); }, 500);
 }
 function showReveal(msg) {
   if (timerInterval) clearInterval(timerInterval);
