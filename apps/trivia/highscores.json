@@ -154,15 +154,93 @@
           "correct": 1
         }
       ]
+    },
+    {
+      "date": "2026-04-08T13:15:38.723Z",
+      "topic": "Leipzig",
+      "questionCount": 5,
+      "playerCount": 1,
+      "winner": "Philipp",
+      "winnerScore": 1281,
+      "standings": [
+        {
+          "name": "Philipp",
+          "id": "467473650",
+          "score": 1281,
+          "correct": 1
+        }
+      ]
+    },
+    {
+      "date": "2026-04-08T16:45:27.411Z",
+      "topic": "Allgemeinwissen",
+      "questionCount": 5,
+      "playerCount": 1,
+      "winner": "Narf",
+      "winnerScore": 2959,
+      "standings": [
+        {
+          "name": "Narf",
+          "id": "255224605",
+          "score": 2959,
+          "correct": 2
+        }
+      ]
+    },
+    {
+      "date": "2026-04-08T17:49:18.900Z",
+      "topic": "British Royals",
+      "questionCount": 5,
+      "playerCount": 1,
+      "winner": "Philipp",
+      "winnerScore": 3942,
+      "standings": [
+        {
+          "name": "Philipp",
+          "id": "467473650",
+          "score": 3942,
+          "correct": 3
+        }
+      ]
+    },
+    {
+      "date": "2026-04-11T19:08:53.109Z",
+      "topic": "seegurken",
+      "questionCount": 5,
+      "playerCount": 2,
+      "winner": "Philipp",
+      "winnerScore": 2390,
+      "standings": [
+        {
+          "name": "Philipp",
+          "id": "467473650",
+          "score": 2390,
+          "correct": 2
+        },
+        {
+          "name": "Narf",
+          "id": "255224605",
+          "score": 1198,
+          "correct": 1
+        }
+      ]
     }
   ],
   "players": {
+    "255224605": {
+      "name": "Narf",
+      "gamesPlayed": 2,
+      "wins": 1,
+      "totalScore": 4157,
+      "totalCorrect": 3,
+      "bestScore": 2959
+    },
     "467473650": {
       "name": "Philipp",
-      "gamesPlayed": 6,
-      "wins": 4,
-      "totalScore": 16589,
-      "totalCorrect": 12,
+      "gamesPlayed": 9,
+      "wins": 7,
+      "totalScore": 24202,
+      "totalCorrect": 18,
       "bestScore": 4165
     },
     "641727245": {

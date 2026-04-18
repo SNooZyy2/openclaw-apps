@@ -19,7 +19,7 @@ const {
   COST_PER_M_OUTPUT,
   COST_PER_M_THINKING,
   gameTokenUsage
-} = require('./config');
+} = require('../config');
 const {
   generateQuestions,
   getFallbackQuestions,
@@ -78,20 +78,20 @@ class Player {
   }
 }
 
-// ─── Dependency injection for quiz-bot integration ──────────────────────────────
-// Set by server.js to avoid circular deps between game.js and quiz-bot.js
+// ─── Dependency injection for bot integration ──────────────────────────────────
+// Set by server.js to avoid circular deps between game.js and bot.js
 
-let _sendQuizBot = null;
+let _sendBot = null;
 let _getLastResultsMessage = null;
 let _setLastResultsMessage = null;
-let _getQuizBotToken = null;
+let _getBotToken = null;
 let _readAtlasUsage = null;
 
-function setQuizBotDeps({ sendQuizBot, getLastResultsMessage, setLastResultsMessage, getQuizBotToken, readAtlasUsage }) {
-  _sendQuizBot = sendQuizBot;
+function setBotDeps({ sendBot, getLastResultsMessage, setLastResultsMessage, getBotToken, readAtlasUsage }) {
+  _sendBot = sendBot;
   _getLastResultsMessage = getLastResultsMessage;
   _setLastResultsMessage = setLastResultsMessage;
-  _getQuizBotToken = getQuizBotToken;
+  _getBotToken = getBotToken;
   _readAtlasUsage = readAtlasUsage;
 }
 
@@ -125,8 +125,8 @@ class Room {
         console.log(`[room ${this.code}] lobby expired (2 min timeout)`);
         this.broadcast({ type: 'error', message: 'Lobby expired. Start a new game with /quiz.' });
         // Clean up Telegram invite message
-        if (this.telegramMessage && _sendQuizBot) {
-          _sendQuizBot('deleteMessage', {
+        if (this.telegramMessage && _sendBot) {
+          _sendBot('deleteMessage', {
             chat_id: this.telegramMessage.chatId,
             message_id: this.telegramMessage.messageId
           }).catch(() => {});
@@ -526,13 +526,13 @@ class Room {
     }
 
     // Delete the quiz bot's join message and post compact results
-    const quizBotToken = _getQuizBotToken ? _getQuizBotToken() : null;
-    console.log(`[room ${this.code}] endGame — telegramMessage: ${!!this.telegramMessage}, quizBotToken: ${!!quizBotToken}, sendQuizBot: ${!!_sendQuizBot}`);
-    if (this.telegramMessage && quizBotToken && _sendQuizBot) {
+    const botToken = _getBotToken ? _getBotToken() : null;
+    console.log(`[room ${this.code}] endGame — telegramMessage: ${!!this.telegramMessage}, botToken: ${!!botToken}, sendBot: ${!!_sendBot}`);
+    if (this.telegramMessage && botToken && _sendBot) {
       const chatId = this.telegramMessage.chatId;
       const winner = this.standings[0];
 
-      _sendQuizBot('deleteMessage', {
+      _sendBot('deleteMessage', {
         chat_id: chatId,
         message_id: this.telegramMessage.messageId
       }).catch(() => {});
@@ -545,7 +545,7 @@ class Room {
       const allTime = hs.allTime.slice(0, 3).map((p, i) => `${medals[i]} ${p.name}: ${fmt(p.totalScore)}`).join(' · ');
       const text = allTime ? `${gameResult}\nAll-time: ${allTime}` : gameResult;
 
-      _sendQuizBot('sendMessage', {
+      _sendBot('sendMessage', {
         chat_id: chatId,
         text,
         disable_notification: true
@@ -553,7 +553,7 @@ class Room {
         if (res?.ok && _setLastResultsMessage) {
           // Store this message ID so next game can delete it
           _setLastResultsMessage({ chatId, messageId: res.result.message_id });
-          console.log(`[quiz-bot] posted compact results`);
+          console.log(`[bot] posted compact results`);
         }
       }).catch(() => {});
     }
@@ -649,12 +649,12 @@ setInterval(() => {
       const age = Date.now() - room.createdAt;
       if (age > ROOM_CLEANUP_EMPTY) {
         // Clean up Telegram invite message if game never finished
-        if (room.telegramMessage && _sendQuizBot) {
-          _sendQuizBot('deleteMessage', {
+        if (room.telegramMessage && _sendBot) {
+          _sendBot('deleteMessage', {
             chat_id: room.telegramMessage.chatId,
             message_id: room.telegramMessage.messageId
           }).catch(() => {});
-          console.log(`[quiz-bot] cleaned up invite (room abandoned)`);
+          console.log(`[bot] cleaned up invite (room abandoned)`);
         }
         room.destroy();
         rooms.delete(code);
@@ -672,5 +672,5 @@ module.exports = {
   Room,
   Player,
   calculateScore,
-  setQuizBotDeps
+  setBotDeps
 };

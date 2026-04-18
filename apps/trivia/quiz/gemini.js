@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { GEMINI_API_KEY, GEMINI_MODEL, OPENROUTER_API_KEY, QUIZ_LLM_MODEL, PERPLEXITY_API_KEY, gameTokenUsage } = require('./config');
+const { GEMINI_API_KEY, GEMINI_MODEL, OPENROUTER_API_KEY, QUIZ_LLM_MODEL, PERPLEXITY_API_KEY, gameTokenUsage } = require('../config');
 
 // ─── LLM API Client (OpenRouter primary, Gemini fallback) ──────────────────────
 
@@ -244,7 +244,7 @@ async function generateQuestions(topic, count) {
 
 let fallbackBank = [];
 try {
-  fallbackBank = JSON.parse(fs.readFileSync(path.join(__dirname, 'questions.json'), 'utf8'));
+  fallbackBank = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'questions.json'), 'utf8'));
 } catch {
   console.log('[fallback] questions.json not found or invalid, fallback disabled');
 }

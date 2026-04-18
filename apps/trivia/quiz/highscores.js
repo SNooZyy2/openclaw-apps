@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const HIGHSCORES_FILE = path.join(__dirname, 'highscores.json');
+const HIGHSCORES_FILE = path.join(__dirname, '..', 'highscores.json');
 
 function loadHighscores() {
   try {

@@ -16,30 +16,30 @@ const {
   gameTokenUsage
 } = require('./config');
 
-const { STATES, rooms, getOrCreateRoom, getRoom, calculateScore } = require('./game');
+const { STATES, rooms, getOrCreateRoom, getRoom, calculateScore } = require('./quiz/game');
 const { verifyTelegramInitData } = require('./auth');
-const { getHighscores } = require('./highscores');
+const { getHighscores } = require('./quiz/highscores');
 const {
-  sendQuizBot,
-  startQuizBot,
+  sendBot,
+  startBot,
   getLastResultsMessage,
   setLastResultsMessage,
-  getQuizBotToken,
-  setDeps: setQuizBotDeps
-} = require('./quiz-bot');
-const { setQuizBotDeps: setGameQuizBotDeps } = require('./game');
+  getBotToken,
+  setDeps: setBotDeps
+} = require('./bot');
+const { setBotDeps: setGameBotDeps } = require('./quiz/game');
 
 // ─── Wire up dependencies (avoid circular requires) ────────────────────────────
 
-// quiz-bot needs getOrCreateRoom and getHighscores from game/highscores
-setQuizBotDeps({ getOrCreateRoom, getHighscores, readAtlasUsage });
+// bot needs getOrCreateRoom and getHighscores from game/highscores
+setBotDeps({ getOrCreateRoom, getHighscores, readAtlasUsage });
 
-// game needs sendQuizBot / lastResultsMessage from quiz-bot
-setGameQuizBotDeps({
-  sendQuizBot,
+// game needs sendBot / lastResultsMessage from bot
+setGameBotDeps({
+  sendBot,
   getLastResultsMessage,
   setLastResultsMessage,
-  getQuizBotToken,
+  getBotToken,
   readAtlasUsage
 });
 
@@ -68,7 +68,7 @@ function readAtlasUsage() {
 
 // ─── HTTP Server ────────────────────────────────────────────────────────────────
 
-const indexHtml = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
+const indexHtml = fs.readFileSync(path.join(__dirname, 'web', 'index.html'), 'utf8');
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
@@ -94,12 +94,12 @@ const server = http.createServer((req, res) => {
   // Serve static files (css, js)
   if (url.pathname === '/style.css') {
     res.writeHead(200, { 'Content-Type': 'text/css; charset=utf-8', 'Cache-Control': 'no-cache' });
-    res.end(fs.readFileSync(path.join(__dirname, 'style.css'), 'utf8'));
+    res.end(fs.readFileSync(path.join(__dirname, 'web', 'style.css'), 'utf8'));
     return;
   }
   if (url.pathname === '/client.js') {
     res.writeHead(200, { 'Content-Type': 'application/javascript; charset=utf-8', 'Cache-Control': 'no-cache' });
-    res.end(fs.readFileSync(path.join(__dirname, 'client.js'), 'utf8'));
+    res.end(fs.readFileSync(path.join(__dirname, 'web', 'client.js'), 'utf8'));
     return;
   }
 
@@ -197,7 +197,7 @@ const server = http.createServer((req, res) => {
   // Serve game client
   if (url.pathname === '/' || url.pathname === '/game') {
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-cache' });
-    res.end(fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8'));
+    res.end(fs.readFileSync(path.join(__dirname, 'web', 'index.html'), 'utf8'));
     return;
   }
 
@@ -234,7 +234,7 @@ wss.on('connection', (ws) => {
             (() => { try { const u = JSON.parse(new URLSearchParams(msg.initData).get('user') || '{}'); return String(u.id); } catch { return ''; } })()
           );
           try {
-            const verified = verifyTelegramInitData(msg.initData, getQuizBotToken(), { skipTtl: isReconnect });
+            const verified = verifyTelegramInitData(msg.initData, getBotToken(), { skipTtl: isReconnect });
             id = verified.id;
             name = [verified.firstName, verified.lastName].filter(Boolean).join(' ') || 'Player';
             photo = msg.photo || null;
@@ -384,5 +384,5 @@ server.listen(PORT, () => {
   console.log(`[trivia] listening on :${PORT}`);
   console.log(`[trivia] base URL: ${BASE_URL}`);
   console.log(`[trivia] gemini: ${GEMINI_API_KEY ? 'configured' : 'NOT configured (fallback only)'}`);
-  startQuizBot();
+  startBot();
 });
