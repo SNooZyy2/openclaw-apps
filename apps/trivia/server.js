@@ -346,6 +346,11 @@ wss.on('connection', (ws) => {
         }
         console.log(`[room ${roomCode}] ${player.name} left the game (${room.players.size} remaining)`);
 
+        // If no players left and game was in progress, end it now
+        if (room.players.size === 0 && room.state !== STATES.LOBBY && room.state !== STATES.GAME_OVER) {
+          room.endGame();
+        }
+
         // Broadcast updated player strip to remaining players
         room.broadcast({ type: 'player_left', playerId, players: room.playerList });
 
@@ -364,6 +369,8 @@ wss.on('connection', (ws) => {
         console.log(`[room ${roomCode}] ${playerId} disconnected (${room.connectedCount} connected)`);
         if (room.state === STATES.LOBBY) {
           room.broadcast({ type: 'lobby_update', players: room.playerList, creatorId: room.creatorId });
+        } else if (room.connectedCount === 0 && room.state !== STATES.GAME_OVER) {
+          room.endGame();
         }
       }
     }
