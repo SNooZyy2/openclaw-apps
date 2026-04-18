@@ -554,7 +554,8 @@ class Room {
       _sendBot('sendMessage', {
         chat_id: chatId,
         text,
-        disable_notification: true
+        disable_notification: true,
+        ...(this.telegramMessage.threadId && { message_thread_id: this.telegramMessage.threadId })
       }).then(res => {
         if (res?.ok && _setLastResultsMessage) {
           // Store this message ID so next game can delete it

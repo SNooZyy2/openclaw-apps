@@ -50,7 +50,7 @@ function setDeps({ getOrCreateRoom, getHighscores, readAtlasUsage }) {
   qrHandler.setDeps({ sendBot, botToken: BOT_TOKEN });
 }
 
-async function handleCostsCommand(chatId, messageId) {
+async function handleCostsCommand(chatId, messageId, threadId) {
   try {
     if (!_readAtlasUsage) throw new Error('Usage data not available');
     const usage = _readAtlasUsage();
@@ -76,13 +76,15 @@ async function handleCostsCommand(chatId, messageId) {
     await sendBot('sendMessage', {
       chat_id: chatId,
       text: lines.join('\n'),
-      reply_to_message_id: messageId
+      reply_to_message_id: messageId,
+      ...(threadId && { message_thread_id: threadId })
     });
   } catch (err) {
     await sendBot('sendMessage', {
       chat_id: chatId,
       text: `Could not read usage data: ${err.message}`,
-      reply_to_message_id: messageId
+      reply_to_message_id: messageId,
+      ...(threadId && { message_thread_id: threadId })
     });
   }
   console.log(`[bot] /costs in chat ${chatId}`);
@@ -101,6 +103,7 @@ async function pollBot() {
       botOffset = update.update_id + 1;
       const msg = update.message;
       if (!msg?.text) continue;
+      const threadId = msg.message_thread_id || null;
 
       // /qr with no args — show usage
       const qrBareMatch = msg.text.match(/^\/qr(?:@\S+)?\s*$/i);
@@ -108,7 +111,8 @@ async function pollBot() {
         await sendBot('sendMessage', {
           chat_id: msg.chat.id,
           text: 'Usage: /qr <text or URL>\nExample: /qr https://example.com',
-          reply_to_message_id: msg.message_id
+          reply_to_message_id: msg.message_id,
+          ...(threadId && { message_thread_id: threadId })
         });
         continue;
       }
@@ -116,28 +120,28 @@ async function pollBot() {
       // /qr <text> — generate ATLAS-branded QR code
       const qrMatch = msg.text.match(/^\/qr(?:@\S+)?\s+(.*)/i);
       if (qrMatch) {
-        await qrHandler.handleQrCommand(msg.chat.id, qrMatch[1].trim(), msg.message_id);
+        await qrHandler.handleQrCommand(msg.chat.id, qrMatch[1].trim(), msg.message_id, threadId);
         continue;
       }
 
       // /cost or /costs — show Atlas API costs
       const costsMatch = msg.text.match(/^\/costs?(?:@\S+)?$/i);
       if (costsMatch) {
-        await handleCostsCommand(msg.chat.id, msg.message_id);
+        await handleCostsCommand(msg.chat.id, msg.message_id, threadId);
         continue;
       }
 
       // /reset — owner only, wipes highscores
       const resetMatch = msg.text.match(/^\/quiz[-_]?reset(?:@\S+)?$/i);
       if (resetMatch) {
-        await quizHandler.handleQuizReset(msg.chat.id, msg.from?.id, msg.message_id);
+        await quizHandler.handleQuizReset(msg.chat.id, msg.from?.id, msg.message_id, threadId);
         continue;
       }
 
       // /quizstop — kill all active rooms
       const stopMatch = msg.text.match(/^\/quiz[-_]?stop(?:@\S+)?$/i);
       if (stopMatch) {
-        await quizHandler.handleQuizStop(msg.chat.id, msg.from?.id, msg.message_id);
+        await quizHandler.handleQuizStop(msg.chat.id, msg.from?.id, msg.message_id, threadId);
         continue;
       }
 
@@ -146,12 +150,12 @@ async function pollBot() {
         const startMatch = msg.text.match(/^\/start\s*(.*)/i);
         if (startMatch) {
           const topic = startMatch[1].trim() || 'General Knowledge';
-          await quizHandler.handleQuizCommand(msg.chat.id, topic, msg.message_id);
+          await quizHandler.handleQuizCommand(msg.chat.id, topic, msg.message_id, threadId);
         }
         continue;
       }
       const topic = match[1].trim() || 'General Knowledge';
-      await quizHandler.handleQuizCommand(msg.chat.id, topic, msg.message_id);
+      await quizHandler.handleQuizCommand(msg.chat.id, topic, msg.message_id, threadId);
     }
   } catch (err) {
     if (!String(err).includes('abort')) {

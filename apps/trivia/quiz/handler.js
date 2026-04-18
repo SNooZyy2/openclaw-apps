@@ -18,7 +18,7 @@ function setDeps({ getOrCreateRoom, getHighscores, sendBot, getLastResultsMessag
 
 const DEFAULT_QUESTION_COUNT = require('../config').DEFAULT_QUESTION_COUNT;
 
-async function handleQuizCommand(chatId, topic, messageId) {
+async function handleQuizCommand(chatId, topic, messageId, threadId) {
   // Delete previous game's results message
   const lastResults = _getLastResultsMessage();
   if (lastResults) {
@@ -36,35 +36,38 @@ async function handleQuizCommand(chatId, topic, messageId) {
     chat_id: chatId,
     text: `🎯 Atlas Quiz!\n\nTopic: ${topic}\n${room.questionCount} questions, 15 seconds each\n\nTap below to join!`,
     reply_markup: { inline_keyboard: [[{ text: '▶ Join Atlas Quiz', url: joinUrl }]] },
-    reply_to_message_id: messageId
+    reply_to_message_id: messageId,
+    ...(threadId && { message_thread_id: threadId })
   });
 
   if (!result?.ok) {
     console.log(`[bot] sendMessage failed:`, JSON.stringify(result));
   }
-  // Store the bot's message ID + chat ID so we can delete it when the game ends
+  // Store the bot's message ID + chat ID + thread so we can post results to the right thread
   if (result?.ok && result.result?.message_id) {
-    room.telegramMessage = { chatId, messageId: result.result.message_id };
+    room.telegramMessage = { chatId, messageId: result.result.message_id, threadId };
   }
 
   console.log(`[bot] /quiz "${topic}" → room ${room.code} in chat ${chatId}`);
 }
 
-async function handleQuizReset(chatId, userId, messageId) {
+async function handleQuizReset(chatId, userId, messageId, threadId) {
   const OWNER_ID = 467473650;
+  const thread = threadId ? { message_thread_id: threadId } : {};
   if (userId !== OWNER_ID) {
-    await _sendBot('sendMessage', { chat_id: chatId, text: 'Only the owner can reset highscores.', reply_to_message_id: messageId });
+    await _sendBot('sendMessage', { chat_id: chatId, text: 'Only the owner can reset highscores.', reply_to_message_id: messageId, ...thread });
   } else {
     saveHighscores({ games: [], players: {} });
-    await _sendBot('sendMessage', { chat_id: chatId, text: 'Highscores reset.', reply_to_message_id: messageId });
+    await _sendBot('sendMessage', { chat_id: chatId, text: 'Highscores reset.', reply_to_message_id: messageId, ...thread });
     console.log('[bot] highscores reset by owner');
   }
 }
 
-async function handleQuizStop(chatId, userId, messageId) {
+async function handleQuizStop(chatId, userId, messageId, threadId) {
   const OWNER_ID = 467473650;
+  const thread = threadId ? { message_thread_id: threadId } : {};
   if (userId !== OWNER_ID) {
-    await _sendBot('sendMessage', { chat_id: chatId, text: 'Only the owner can stop games.', reply_to_message_id: messageId });
+    await _sendBot('sendMessage', { chat_id: chatId, text: 'Only the owner can stop games.', reply_to_message_id: messageId, ...thread });
   } else {
     const { rooms } = require('./game');
     let count = 0;
@@ -74,7 +77,7 @@ async function handleQuizStop(chatId, userId, messageId) {
       rooms.delete(code);
       count++;
     }
-    await _sendBot('sendMessage', { chat_id: chatId, text: count > 0 ? `Stopped ${count} game(s).` : 'No active games.', reply_to_message_id: messageId });
+    await _sendBot('sendMessage', { chat_id: chatId, text: count > 0 ? `Stopped ${count} game(s).` : 'No active games.', reply_to_message_id: messageId, ...thread });
     console.log(`[bot] /quizstop — killed ${count} rooms`);
   }
 }
