@@ -1,5 +1,6 @@
 let ws = null, myId = null, roomCode = null, creatorId = null;
 let currentScreen = 'lobby', timerInterval = null, pregameInterval = null, lobbyTimerInterval = null;
+const exitTimers = new Map();
 let reconnectAttempts = 0;
 const MAX_RECONNECT = 3;
 let previousStandings = {}; // 2.4: track previous scores for deltas
@@ -62,10 +63,16 @@ function showScreen(id) {
   const prev = document.querySelector('.screen.active');
   const el = document.getElementById(id);
   if (!el) return;
+  if (exitTimers.has(el)) {
+    clearTimeout(exitTimers.get(el));
+    exitTimers.delete(el);
+    el.classList.remove('exiting');
+  }
   if (prev && prev.id !== id) {
     prev.classList.add('exiting');
-    prev.addEventListener('animationend', () => prev.classList.remove('active', 'exiting'), { once: true });
-    setTimeout(() => prev.classList.remove('active', 'exiting'), 250);
+    const cleanup = () => { prev.classList.remove('active', 'exiting'); exitTimers.delete(prev); };
+    prev.addEventListener('animationend', (e) => { if (e.target === prev) cleanup(); }, { once: true });
+    exitTimers.set(prev, setTimeout(cleanup, 250));
   }
   el.classList.remove('exiting');
   el.classList.add('active');

@@ -4,7 +4,7 @@
 > It is the single source of truth for current focus, active work, and status.
 > Read it at the start of every task. Update it after every increment.
 
-**Last updated**: 2026-04-13
+**Last updated**: 2026-04-18
 
 ---
 
@@ -51,6 +51,7 @@ Restructure `apps/trivia/` from a flat file layout into feature directories (`qu
 | 2026-04-13 | OpenClaw upgrade 2026.3.14 → 2026.4.12-beta.1 | — |
 | 2026-04-13 | Post-upgrade fixes: MEDIA delivery, edit tool, group chat NO_REPLY, dedup | — |
 | 2026-04-13 | Multi-instance deploy: Atlas migrated to ~/instances/atlas/, Meteor deployed as @MeteorBotBot | ADR-007 |
+| 2026-04-18 | Fix blank screen on quiz question transitions during WebSocket reconnection ([#5](https://github.com/SNooZyy2/openclaw-apps/issues/5)) | — |
 
 ---
 

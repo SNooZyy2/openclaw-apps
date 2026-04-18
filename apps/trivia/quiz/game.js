@@ -591,7 +591,8 @@ class Room {
           ...base, type: 'question',
           index: this.currentQuestion, total: this.questions.length,
           question: q.question, options: q.options, timeLimit: remaining,
-          alreadyAnswered: this.answersThisRound.has(playerId)
+          alreadyAnswered: this.answersThisRound.has(playerId),
+          players: this.playerList
         });
         break;
       }
