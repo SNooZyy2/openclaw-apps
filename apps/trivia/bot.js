@@ -10,10 +10,13 @@ let botOffset = 0;
 let lastResultsMessage = null; // { chatId, messageId } — deleted when next game starts
 
 async function sendBot(method, body) {
+  // Long-poll requests get a generous timeout; regular API calls get 30s
+  const timeoutMs = method === 'getUpdates' ? 60_000 : 30_000;
   const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/${method}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body)
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(timeoutMs)
   });
   try { return await res.json(); } catch { return null; }
 }
