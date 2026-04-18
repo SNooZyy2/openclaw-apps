@@ -11,7 +11,7 @@ const BASE_URL = process.env.BASE_URL || `https://srv1176342.taile65f65.ts.net`;
 // Timing (ms)
 const PREGAME_DURATION = 3000;
 const QUESTION_TIME_LIMIT = 15000;
-const REVEAL_DURATION = 5000;
+const REVEAL_DURATION = 8000;
 const LEADERBOARD_DURATION = 5000;
 const ROOM_CLEANUP_AFTER_GAME = 5 * 60 * 1000;
 const ROOM_CLEANUP_EMPTY = 2 * 60 * 1000;

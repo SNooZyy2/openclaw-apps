@@ -265,8 +265,8 @@ h2 { font-size: 1.3rem; font-weight: 600; margin-bottom: 6px; }
 .streak-text.streak-fire { color: #e74c3c; text-shadow: 0 0 8px rgba(231,76,60,0.5); }
 .fun-fact {
   background: rgba(22, 33, 62, 0.7); border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 10px; padding: 12px 16px;
-  max-width: 450px; font-size: 0.9rem; color: var(--text-dim); line-height: 1.4; margin-top: 4px;
+  border-left: 3px solid var(--accent); border-radius: 0 10px 10px 0; padding: 12px 16px;
+  max-width: 450px; font-size: 0.95rem; color: var(--text); line-height: 1.4; margin-top: 10px;
 }
 .commentary {
   background: rgba(233, 69, 96, 0.1); border-left: 3px solid var(--accent);

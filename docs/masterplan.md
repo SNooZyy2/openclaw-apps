@@ -52,6 +52,7 @@ Restructure `apps/trivia/` from a flat file layout into feature directories (`qu
 | 2026-04-13 | Post-upgrade fixes: MEDIA delivery, edit tool, group chat NO_REPLY, dedup | — |
 | 2026-04-13 | Multi-instance deploy: Atlas migrated to ~/instances/atlas/, Meteor deployed as @MeteorBotBot | ADR-007 |
 | 2026-04-18 | Fix blank screen on quiz question transitions during WebSocket reconnection ([#5](https://github.com/SNooZyy2/openclaw-apps/issues/5)) | — |
+| 2026-04-18 | Reveal screen: more reading time (5→8 s) and fun-fact visual bump | ADR-010 |
 
 ---
 
